@@ -203,40 +203,17 @@ def check_file_exist(config_dict):
         initialurl(config_dict['url_path'])
     sg.Popup('檢查檔案已完成!!')
 
-def change_sys(config_dict):
-    while True:
-        layout = [[[sg.Push(), sg.Text('請選擇下列功能'),sg.Push()],
-                    [sg.Button('變更ＣＲ帳密', key='-CHANGECR-'),sg.Button('變更簽章清單',key='-CHANGESIGN-')],
-                    [sg.Button('變更ＶＳ帳密',key='-CHANGEVS-'),sg.Button('變更簡訊清單', key='-CHANGESMS-')],
-                    [sg.Button('變更風格樣式', key='-CHANGETHEME-'),sg.Button('變更授權檔案',key='-CHANGECERT-'),],
-                    [sg.Button('檢查系統檔案', key='-CHECKFILE-'),sg.Button('變更網址指標',key='-CHANGEURL-'),],
-                    [sg.Push(),sg.Button('設定完成',size=(10,1),key='-OK-'), sg.Push()]]]
-        event, values = sg.Window('更新系統設定', layout, modal=True).read(close=True)
-        if event == '-OK-' or event == sg.WIN_CLOSED:
-            break
-        if event == '-CHANGEVS-':
-            saveidpw('VS', config_dict['vs_id_path'])
-        if event == '-CHANGECR-':
-            saveidpw('CR', config_dict['cr_id_path'])
-        if event == '-CHANGESIGN-':
-            savelist("sign", config_dict['list_path'])
-        if event == '-CHANGESMS-':
-            savelist("phone", config_dict['phone_path'])
-        if event == '-CHANGECERT-':
-            savegooglefile(config_dict['google_secret_path'], config_dict['google_token_path'])
-        if event == '-CHANGETHEME-':
-            event, values = sg.Window('變更風格', [[sg.Combo(sg.theme_list(), readonly=True, k='-THEME LIST-'), sg.OK(), sg.Cancel()]]).read(close=True)
-            if values['-THEME LIST-'] !='' and values['-THEME LIST-'] != sg.theme():
-                config_dict['theme'] = sg.theme(values['-THEME LIST-'])
-        if event == '-CHECKFILE-':
-            sg.Popup("重新檢測檔案!")
-            check_file_exist(config_dict)
-        if event == '-CHANGEURL-':
-            changeurl(config_dict['url_path'])
+def change_sys():
+    layout = [[[sg.Push(), sg.Text('請選擇下列功能'),sg.Push()],
+                [sg.Button('變更ＣＲ帳密', key='-CHANGECR-'),sg.Button('變更簽章清單',key='-CHANGESIGN-')],
+                [sg.Button('變更ＶＳ帳密',key='-CHANGEVS-'),sg.Button('變更簡訊清單', key='-CHANGESMS-')],
+                [sg.Button('變更風格樣式', key='-CHANGETHEME-'),sg.Button('變更授權檔案',key='-CHANGECERT-'),],
+                [sg.Button('檢查系統檔案', key='-CHECKFILE-'),sg.Button('變更網址指標',key='-CHANGEURL-'),],
+                [sg.Push(),sg.Button('設定完成',size=(10,1),key='-EXIT-'), sg.Push()]]]
+    return sg.Window('更新系統設定', layout, finalize=True)
 
 def save_config(config_dict, values, config_path):
     values.pop('-LOG-', None)
     config_dict.update(values)
     data = json.dumps(config_dict)
     save_file(config_path, data)
-    
