@@ -211,7 +211,7 @@ def change_sys(config_dict):
                     [sg.Button('變更風格樣式', key='-CHANGETHEME-'),sg.Button('變更授權檔案',key='-CHANGECERT-'),],
                     [sg.Button('檢查系統檔案', key='-CHECKFILE-'),sg.Button('變更網址指標',key='-CHANGEURL-'),],
                     [sg.Push(),sg.Button('設定完成',size=(10,1),key='-OK-'), sg.Push()]]]
-        event, values = sg.Window('更新系統設定', layout).read(close=True)
+        event, values = sg.Window('更新系統設定', layout, modal=True).read(close=True)
         if event == '-OK-' or event == sg.WIN_CLOSED:
             break
         if event == '-CHANGEVS-':
