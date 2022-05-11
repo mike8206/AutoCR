@@ -15,6 +15,7 @@ ie_driver_path = 'sys\IEDriverServer32.exe'
 
 # options
 config_dict={}
+url_dict={}
 values={}
 
 while True:
@@ -190,7 +191,7 @@ def main():
         ], vertical_alignment='t')
 
         layout = [[[digisign_col,open_clinic_col,sms_col,other_col],[sys_col]]]
-        return sg.Window('全自動小CR', layout)
+        return sg.Window('全自動小CR', layout, finalize=True)
 
     # initial setup
     if config_dict['setup'] == False:
@@ -201,13 +202,18 @@ def main():
     scheduler.add_listener(listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR)
     scheduler.start()
 
-    window = make_window(config_dict)
+    window1, window2 = make_window(config_dict), None
 
     while True:
-        event, values = window.read()
+        window, event, values = sg.read_all_windows(timeout=100)
         if event == '-EXIT-':
-            sysfunction.save_config(config_dict, values, config_path)
-            break
+            window.close()
+            if window == window2:
+                window2 = None
+                window1 = make_window(config_dict)
+            elif window == window1:
+                sysfunction.save_config(config_dict, values, config_path)
+                break
         if scheduler.running != True:
             scheduler.start()
         if event == '-RUNDIGISIGN-':
@@ -229,7 +235,8 @@ def main():
             window.Element('-SMSSWITCH-').Update(('加入排程','刪除排程')[switch_sms], button_color=(('white', ('green','red')[switch_sms])))
             sms_switch_schdlr(switch_sms, values['am_sms_hr'], values['am_sms_min'], values['pm_sms_hr'], values['pm_sms_min'])
         if event == '-OCR-':
-            otherfunction.auto_ie_ocr(url_dict)
+            sg.Popup('尚未實裝!')
+            # otherfunction.make_auto_ocr()
         if event == '-CRLOGIN-':
             sg.Popup('尚未實裝!')
         if event == '-VSLOGIN-':
@@ -243,10 +250,28 @@ def main():
         if event == '-SAVECONFIG-':
             sysfunction.save_config(config_dict, values, config_path)
             sg.Popup("已成功儲存設定!")
-        if event == '-CHANGESYS-':
-            sysfunction.change_sys(config_dict)
+        if event == '-CHANGESYS-' and not window2:
+            window2 = sysfunction.change_sys()
             window.close()
-            window = make_window(config_dict)
+        if event == '-CHANGEVS-':
+            sysfunction.saveidpw('VS', config_dict['vs_id_path'])
+        if event == '-CHANGECR-':
+            sysfunction.saveidpw('CR', config_dict['cr_id_path'])
+        if event == '-CHANGESIGN-':
+            sysfunction.savelist("sign", config_dict['list_path'])
+        if event == '-CHANGESMS-':
+            sysfunction.savelist("phone", config_dict['phone_path'])
+        if event == '-CHANGECERT-':
+            sysfunction.savegooglefile(config_dict['google_secret_path'], config_dict['google_token_path'])
+        if event == '-CHANGETHEME-':
+            event, values = sg.Window('變更風格', [[sg.Combo(sg.theme_list(), readonly=True, k='-THEME LIST-'), sg.OK(), sg.Cancel()]], finalize=True).read(close=True)
+            if values['-THEME LIST-'] !='' and values['-THEME LIST-'] != sg.theme():
+                config_dict['theme'] = sg.theme(values['-THEME LIST-'])
+        if event == '-CHECKFILE-':
+            sg.Popup("重新檢測檔案!")
+            sysfunction.check_file_exist(config_dict)
+        if event == '-CHANGEURL-':
+            sysfunction.changeurl(config_dict['url_path'])
         if event == sg.WIN_CLOSED:
             break
     scheduler.shutdown()
