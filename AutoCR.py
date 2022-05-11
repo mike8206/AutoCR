@@ -229,7 +229,7 @@ def main():
             window.Element('-SMSSWITCH-').Update(('加入排程','刪除排程')[switch_sms], button_color=(('white', ('green','red')[switch_sms])))
             sms_switch_schdlr(switch_sms, values['am_sms_hr'], values['am_sms_min'], values['pm_sms_hr'], values['pm_sms_min'])
         if event == '-OCR-':
-            sg.Popup('尚未實裝!')
+            otherfunction.auto_ie_ocr(url_dict)
         if event == '-CRLOGIN-':
             sg.Popup('尚未實裝!')
         if event == '-VSLOGIN-':
