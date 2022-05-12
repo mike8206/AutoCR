@@ -28,7 +28,7 @@ def main(url_dict, cr_id_path, phone_path, google_secret_path, google_token_path
     except:
         raise ValueError('簡訊檔案錯誤!!')
 
-    if google_cal_id[0]:
+    if len(google_cal_id) != 0:
         # get event from google calendar
         SMSstring = google_calendar(google_secret_path, google_token_path, google_cal_id)
         # chrome driver
