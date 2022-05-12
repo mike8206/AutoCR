@@ -18,21 +18,19 @@ config_dict={}
 url_dict={}
 values={}
 
-while True:
-    try:
-        with open(config_path, encoding="ANSI") as file:
-            s = file.read()
-            config_dict = json.loads(s)
-            break
-    except:
-        sysfunction.initialconfig(config_path)
+try:
+    with open(config_path, encoding="ANSI") as file:
+        s = file.read()
+        config_dict = json.loads(s)
+except:
+    config_dict = sysfunction.initialconfig(config_path)
 
 try:
     with open(config_dict['url_path'], encoding="ANSI") as file:
         s = file.read()
-        url_dict = json.loads(s)    
+        url_dict = json.loads(s)
 except:
-    sysfunction.initialurl(config_dict['url_path'])
+    url_dict = sysfunction.initialurl(config_dict['url_path'])
 
 # functions
 def digisign():
