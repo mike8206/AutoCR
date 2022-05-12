@@ -1,9 +1,9 @@
 import json
 import PySimpleGUI as sg
-from os.path import exists
+from os.path import exists, relpath
 
 def save_file(filename, data):
-    with open(filename, 'w', encoding="ANSI") as file:
+    with open(filename, 'w', encoding="UTF-8") as file:
         file.write(str(data))
 
 def initialconfig(config_path):
@@ -15,6 +15,7 @@ def initialconfig(config_path):
         "phone_path": "Phonelist.txt",
         "google_secret_path": "secret.json",
         "google_token_path": "token.json",
+        "google_cal_id": ['primary'],
         "url_path": "sys\web_config.txt",
         "theme": "DefaultNoMoreNagging", 
         "digi_hr": 6,
@@ -38,7 +39,7 @@ def initialurl(url_path):
         'portal_url': 'http://portal.ntuh.gov.tw/General/Login.aspx',
         'digisign_replace_url': 'http://ihisaw.ntuh.gov.tw/WebApplication/DigitalSignature/DSExecuteEmpReplace.aspx?SESSION=',
         'digisign_background_url': 'http://ihisaw.ntuh.gov.tw/WebApplication/DigitalSignature/BackGroundDS.aspx?SESSION=',
-        'open_clinic_url': "http://hisaw.ntuh.gov.tw/WebApplication/Clinics/OpenClinicsByClinicNo.aspx?SESSION=",
+        'open_clinic_url': "http://hisaw.ntuh.gov.tw/WebApplication/Clinics/OpenClinics.aspx?SESSION=",
         'send_sms_url': "http://ihisaw.ntuh.gov.tw/WebApplication/OtherIndependentProj/CriticalVentilator/MessageSend.aspx?SESSION=",
         'hosp_name': '總院區',
         'dept_name': '家庭醫學部',
@@ -101,7 +102,7 @@ def saveidpw(person, filename):
 
 def savelist(type, filename):
     try:
-        with open(filename, 'r', encoding='ANSI') as file:
+        with open(filename, 'r', encoding='UTF-8') as file:
             defaulttext = file.read()
     except:
         defaulttext = ''
@@ -156,11 +157,37 @@ def savegooglefile(google_secret_path, google_token_path):
             sg.Popup('設定未完成!')
             break
 
+def savegooglecalid():
+    googlecalid = []
+    while True:
+        layout = [[[sg.Text('請輸入Google日曆ID')],
+            [sg.Text('Google日曆ID'), sg.InputText(default_text='primary', key='-googleid-', s=(20,1))],
+            [sg.Button('Next', key='ADD'), sg.OK(), sg.Cancel()]]]
+        event, values = sg.Window('設定Google日曆ID', layout).read(close=True)
+        if event == 'OK':
+            if values['-googleid-']:
+                googlecalid.append(values['-googleid-'])
+            if googlecalid:
+                googlecalid = list(dict.fromkeys(googlecalid))
+                sg.Popup('設定已完成!')
+                return googlecalid
+            else:
+                sg.Popup('輸入資訊不完整!')
+        if event == 'ADD':
+            if values['-googleid-']:
+                googlecalid.append(values['-googleid-'])
+                sg.Popup('日曆ID已加入!')
+            else:
+                sg.Popup('輸入資訊不完整!')
+        else:
+            sg.Popup('設定未完成!')
+            break
+
 def changeurl(url_path):
     url_dict = {}
     while True:
         try:
-            with open(url_path, encoding="ANSI") as file:
+            with open(url_path, encoding="UTF-8") as file:
                 s = file.read()
                 url_dict = json.loads(s) 
         except:
@@ -184,6 +211,38 @@ def changeurl(url_path):
             sg.Popup('設定未完成!')
             break
 
+def openotherfunction(config_dict):
+    while True:
+        layout = [[[sg.Text('請選擇檔案以開啟功能')],
+                    [sg.Text('IE自動填入驗證碼: ')],
+                    [sg.Text(), sg.FileBrowse(file_types=(("執行檔", "*.exe"), ), key='-autoocr-')],
+                    [sg.Text('IE自動登入: ')],
+                    [sg.Text(), sg.FileBrowse(file_types=(("VBS檔", "*.vbs"), ), key='-ielogin-')],
+                    [sg.Text('自動改績效: ')],
+                    [sg.Text(), sg.FileBrowse(file_types=(("執行檔", "*.exe"), ), key='-autocredit-')],
+                    [sg.Text('查診間電話: ')],
+                    [sg.Text(), sg.FileBrowse(file_types=(("執行檔", "*.exe"), ), key='-findphoneclinic-')],
+                    [sg.Text('查超音波電話: ')],
+                    [sg.Text(), sg.FileBrowse(file_types=(("執行檔", "*.exe"), ), key='-findphoneecho-')],
+                    [sg.OK(), sg.Cancel()]]]
+        event, values = sg.Window('開啟額外功能', layout).read(close=True)
+        if event == 'OK':
+            if values['-autoocr-'] !='':
+                config_dict.update(autoocr_path = relpath(values['-autoocr-']))
+            if values['-ielogin-'] !='':
+                config_dict.update(login_path = relpath(values['-ielogin-']))
+            if values['-autocredit-'] !='':
+                config_dict.update(autocredit_path = relpath(values['-autocredit-']))
+            if values['-findphoneclinic-'] !='':
+                config_dict.update(findphoneclinic_path = relpath(values['-findphoneclinic-']))
+            if values['-findphoneecho-'] !='':
+                config_dict.update(findphoneecho_path = relpath(values['-findphoneecho-']))
+            sg.Popup('額外功能設定完成!')
+            break
+        else:
+            sg.Popup('設定未完成!')
+            break
+
 def check_file_exist(config_dict):
     if exists(config_dict['vs_id_path']) != True:
         sg.Popup('未設定VS帳號密碼!!')
@@ -200,6 +259,10 @@ def check_file_exist(config_dict):
     if (exists(config_dict['google_secret_path']) or exists(config_dict['google_token_path'])) != True:
         sg.Popup('未檢查到Google授權檔案!!')
         savegooglefile(config_dict['google_secret_path'], config_dict['google_token_path'])
+    if config_dict['google_cal_id'] != True:
+        print(config_dict['google_cal_id'])
+        sg.Popup('未檢查到Google日曆ID!!')
+        config_dict.update(google_cal_id = savegooglecalid())
     if exists(config_dict['url_path']) != True:
         sg.Popup('未檢查到網頁設定!!')
         initialurl(config_dict['url_path'])
@@ -207,10 +270,11 @@ def check_file_exist(config_dict):
 
 def change_sys():
     layout = [[[sg.Push(), sg.Text('請選擇下列功能'),sg.Push()],
-                [sg.Button('變更ＣＲ帳密', key='-CHANGECR-'),sg.Button('變更簽章清單',key='-CHANGESIGN-')],
-                [sg.Button('變更ＶＳ帳密',key='-CHANGEVS-'),sg.Button('變更簡訊清單', key='-CHANGESMS-')],
-                [sg.Button('變更風格樣式', key='-CHANGETHEME-'),sg.Button('變更授權檔案',key='-CHANGECERT-'),],
-                [sg.Button('檢查系統檔案', key='-CHECKFILE-'),sg.Button('變更網址指標',key='-CHANGEURL-'),],
+                [sg.Button('變更ＣＲ帳密', key='-CHANGECR-'),sg.Button('變更簽章清單', key='-CHANGESIGN-')],
+                [sg.Button('變更ＶＳ帳密', key='-CHANGEVS-'),sg.Button('變更簡訊清單', key='-CHANGESMS-')],
+                [sg.Button('變更日曆ＩＤ', key='-CHANGECALID-'),sg.Button('變更授權檔案', key='-CHANGECERT-'),],
+                [sg.Button('變更風格樣式', key='-CHANGETHEME-'),sg.Button('開啟額外功能', key='-OPENFUNCTION-')],
+                [sg.Button('檢查系統檔案', key='-CHECKFILE-'),sg.Button('變更網址指標', key='-CHANGEURL-'),],
                 [sg.Push(),sg.Button('設定完成',size=(10,1),key='-EXIT-'), sg.Push()]]]
     return sg.Window('更新系統設定', layout, finalize=True)
 
