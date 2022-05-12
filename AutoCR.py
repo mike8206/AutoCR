@@ -1,10 +1,12 @@
 from datetime import datetime
+from os.path import exists
+import subprocess
 import PySimpleGUI as sg
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
 import json
-from lib import autodigisign, autoopenclinic, autosms, sysfunction, otherfunction
+from lib import autodigisign, autoopenclinic, autosms, sysfunction
 
 # file path
 config_path = 'sys\config.txt'
@@ -19,14 +21,14 @@ url_dict={}
 values={}
 
 try:
-    with open(config_path, encoding="ANSI") as file:
+    with open(config_path, encoding="UTF-8") as file:
         s = file.read()
         config_dict = json.loads(s)
 except:
     config_dict = sysfunction.initialconfig(config_path)
 
 try:
-    with open(config_dict['url_path'], encoding="ANSI") as file:
+    with open(config_dict['url_path'], encoding="UTF-8") as file:
         s = file.read()
         url_dict = json.loads(s)
 except:
@@ -40,7 +42,7 @@ def openclnc():
     autoopenclinic.main(url_dict, config_dict['vs_id_path'], chrome_driver_path, ie_driver_path)
 
 def sms():
-    autosms.main(url_dict, config_dict['cr_id_path'], config_dict['phone_path'], config_dict['google_secret_path'], config_dict['google_token_path'], chrome_driver_path)
+    autosms.main(url_dict, config_dict['cr_id_path'], config_dict['phone_path'], config_dict['google_secret_path'], config_dict['google_token_path'], config_dict['google_cal_id'], chrome_driver_path)
 
 # main function
 def main():
@@ -55,22 +57,22 @@ def main():
         except:
             job_time = "無"
         if event.exception:
-            logstring = str(datetime.now().strftime("%H:%M:%S"))+" "+ job_id+' 失敗! 已儲存錯誤紀錄!'
-            error_msg = str(event.exception)
+            logstring = str(datetime.now().strftime("%m/%d %H:%M:%S"))+" "+ job_id+' 失敗! 已儲存錯誤紀錄!'
+            error_msg = str(datetime.now().strftime("%m/%d %H:%M:%S"))+" "+ str(event.exception)
             error_log(error_msg)
         else:
-            logstring = str(datetime.now().strftime("%H:%M:%S"))+" "+ job_id+' 成功執行! 下次執行時間: '+ str(job_time)
+            logstring = str(datetime.now().strftime("%m/%d %H:%M:%S"))+" "+ job_id+' 成功執行! 下次執行時間: '+ str(job_time)
         update_log(logstring)
 
     def update_log(logstring):
-        with open(log_path, 'a', encoding="ANSI") as file:
+        with open(log_path, 'a', encoding="UTF-8") as file:
             file.write(logstring+"\n")
-        with open(log_path, 'r', encoding="ANSI") as file: 
+        with open(log_path, 'r', encoding="UTF-8") as file: 
             console_log = file.read()
-        window['-LOG-'].update(console_log)
+            window1['-LOG-'].update(console_log)
 
     def error_log(error_msg):
-        with open(error_log_path, 'a', encoding="ANSI") as file:
+        with open(error_log_path, 'a', encoding="UTF-8") as file:
             file.write(error_msg+"\n")
         
     def schdlr_cron_format(hr, min, hrrepeat):
@@ -177,7 +179,7 @@ def main():
 
         other_col = sg.Column([
             [sg.Frame('常用功能', layout=[
-                [sg.Button('自動驗證碼', key='-OCR-', size=(10,1))],
+                [sg.Button('自動驗證碼', key='-AUTOOCR-', size=(10,1))],
                 [sg.Button('小ＣＲ登入', key='-CRLOGIN-', size=(10,1))],
                 [sg.Button('ＶＳ登入', key='-VSLOGIN-', size=(10,1))],
                 [sg.Button('自動改績效', key='-AUTOCREDIT-', size=(10,1))],
@@ -232,19 +234,43 @@ def main():
             switch_sms = not switch_sms
             window.Element('-SMSSWITCH-').Update(('加入排程','刪除排程')[switch_sms], button_color=(('white', ('green','red')[switch_sms])))
             sms_switch_schdlr(switch_sms, values['am_sms_hr'], values['am_sms_min'], values['pm_sms_hr'], values['pm_sms_min'])
-        if event == '-OCR-':
-            sg.Popup('尚未實裝!')
-            # otherfunction.make_auto_ocr()
-        if event == '-CRLOGIN-':
-            sg.Popup('尚未實裝!')
-        if event == '-VSLOGIN-':
-            sg.Popup('尚未實裝!')
+        if event == '-AUTOOCR-':
+            try:
+                if exists(config_dict['autoocr_path']):
+                    subprocess.Popen([config_dict['autoocr_path']])
+            except:
+                sg.Popup('尚未實裝!')
+        if event in ('-VSLOGIN-', '-CRLOGIN-'):
+            try:
+                if exists(config_dict['login_path']):
+                    idpwpin = []
+                    if event == '-VSLOGIN-':
+                        with open(config_dict['vs_id_path'], encoding="UTF-8") as f:
+                            idpwpin = f.read().splitlines()
+                    if event == '-CRLOGIN-':
+                        with open(config_dict['cr_id_path'], encoding="UTF-8") as f:
+                            idpwpin = f.read().splitlines()
+                    subprocess.Popen(['wscript.exe', config_dict['login_path'], url_dict['portal_url'], idpwpin[0], idpwpin[1] ])
+            except:
+                sg.Popup('尚未實裝!')
         if event == '-AUTOCREDIT-':
-            sg.Popup('尚未實裝!')
+            try:
+                if exists(config_dict['autocredit_path']):
+                    subprocess.Popen([config_dict['autocredit_path']])
+            except:
+                sg.Popup('尚未實裝!')
         if event == '-FINDPHONECLINIC-':
-            sg.Popup('尚未實裝!')
+            try:
+                if exists(config_dict['findphoneclinic_path']):
+                    subprocess.Popen([config_dict['findphoneclinic_path']])
+            except:
+                sg.Popup('尚未實裝!')
         if event == '-FINDPHONEECHO-':
-            sg.Popup('尚未實裝!')
+            try:
+                if exists(config_dict['findphoneecho_path']):
+                    subprocess.Popen([config_dict['findphoneecho_path']])
+            except:
+                sg.Popup('尚未實裝!')
         if event == '-SAVECONFIG-':
             sysfunction.save_config(config_dict, values, config_path)
             sg.Popup("已成功儲存設定!")
@@ -259,18 +285,23 @@ def main():
             sysfunction.savelist("sign", config_dict['list_path'])
         if event == '-CHANGESMS-':
             sysfunction.savelist("phone", config_dict['phone_path'])
+        if event == '-CHANGECALID-':
+            config_dict.update(google_cal_id = sysfunction.savegooglecalid())
         if event == '-CHANGECERT-':
             sysfunction.savegooglefile(config_dict['google_secret_path'], config_dict['google_token_path'])
         if event == '-CHANGETHEME-':
             event, values = sg.Window('變更風格', [[sg.Combo(sg.theme_list(), readonly=True, k='-THEME LIST-'), sg.OK(), sg.Cancel()]], finalize=True).read(close=True)
             if values['-THEME LIST-'] !='' and values['-THEME LIST-'] != sg.theme():
                 config_dict['theme'] = sg.theme(values['-THEME LIST-'])
+        if event == '-OPENFUNCTION-':
+            sysfunction.openotherfunction(config_dict)
         if event == '-CHECKFILE-':
             sg.Popup("重新檢測檔案!")
             sysfunction.check_file_exist(config_dict)
         if event == '-CHANGEURL-':
             sysfunction.changeurl(config_dict['url_path'])
         if event == sg.WIN_CLOSED:
+            sysfunction.save_config(config_dict, values, config_path)
             break
     scheduler.shutdown()
 
