@@ -259,8 +259,7 @@ def check_file_exist(config_dict):
     if (exists(config_dict['google_secret_path']) or exists(config_dict['google_token_path'])) != True:
         sg.Popup('未檢查到Google授權檔案!!')
         savegooglefile(config_dict['google_secret_path'], config_dict['google_token_path'])
-    if config_dict['google_cal_id'] != True:
-        print(config_dict['google_cal_id'])
+    if len(config_dict['google_cal_id']) == 0:
         sg.Popup('未檢查到Google日曆ID!!')
         config_dict.update(google_cal_id = savegooglecalid())
     if exists(config_dict['url_path']) != True:
