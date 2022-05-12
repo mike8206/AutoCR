@@ -5,8 +5,6 @@ from lib.login import login
 from lib.background_sign import background_sign
 from lib.transfer_digisign import transfer_digisign
 
-# url base
-
 # options
 TIMEOUT = 5
 chrome_options = webdriver.ChromeOptions()
@@ -19,7 +17,7 @@ def main(url_dict, vs_id_path, list_path, chrome_driver_path, ie_driver_path):
     # read portal credential from txt file
     vsidpw = {}
     try:
-        with open(vs_id_path, encoding="ANSI") as f:
+        with open(vs_id_path, encoding="UTF-8") as f:
             idpwpin = f.read().splitlines()
         # id pw pin (帳號 密碼 PIN碼)
         vsidpw['id']=idpwpin[0]
@@ -31,7 +29,7 @@ def main(url_dict, vs_id_path, list_path, chrome_driver_path, ie_driver_path):
     # read doctor list from txt file (for digital signature)
     dlist = {}
     try:
-        with open(list_path, encoding="ANSI") as f:
+        with open(list_path, encoding="UTF-8") as f:
             for line in f:
                 (key, val) = line.split(' ',1)
                 dlist[key] = val.removesuffix('\n')
