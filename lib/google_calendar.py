@@ -68,10 +68,10 @@ def week_day(date):
     return weekstring
 
 def SMS_string(events, starttime):
+    eventstring = ''
     if not events:
-        eventstring = ''
+        pass
     else:
-        eventstring = ''
         for event in events:
             start = event['start'].get('dateTime', event['start'].get('date'))
             event_start = datetime.strptime(start, "%Y-%m-%dT%H:%M:%S%z")
