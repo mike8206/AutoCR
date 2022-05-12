@@ -7,7 +7,7 @@ def save_file(filename, data):
         file.write(str(data))
 
 def initialconfig(config_path):
-    data = {
+    config_dict = {
         "setup": False,
         "vs_id_path": "loginID.txt",
         "cr_id_path": "CRID.txt",
@@ -29,11 +29,12 @@ def initialconfig(config_path):
         "pm_sms_hr": 16,
         "pm_sms_min": 0
     }
-    data = json.dumps(data)
+    data = json.dumps(config_dict)
     save_file(config_path, data)
+    return config_dict
 
 def initialurl(url_path):
-    data = {
+    url_dict = {
         'portal_url': 'http://portal.ntuh.gov.tw/General/Login.aspx',
         'digisign_replace_url': 'http://ihisaw.ntuh.gov.tw/WebApplication/DigitalSignature/DSExecuteEmpReplace.aspx?SESSION=',
         'digisign_background_url': 'http://ihisaw.ntuh.gov.tw/WebApplication/DigitalSignature/BackGroundDS.aspx?SESSION=',
@@ -74,8 +75,9 @@ def initialurl(url_path):
         'sms_msg_input': '#NTUHWeb1_MessageContent',
         'sms_send_btn': '#NTUHWeb1_btnSendSMSAndEmail',
     }
-    data = json.dumps(data)
+    data = json.dumps(url_dict)
     save_file(url_path, data)
+    return url_dict
 
 def saveidpw(person, filename):
     while True:
@@ -106,7 +108,7 @@ def savelist(type, filename):
     if type == 'sign':
         text = '簽章'
         example = '00xx55 程主任'+'\n'+'11xx73 吳大宇'
-        multilinesize = (20,15)
+        multilinesize = (40,15)
     else:
         text = '簡訊'
         example = '097265xxx0,097265xxx1,097265xxx2,097265xxx3'
