@@ -2,7 +2,6 @@ from lib.wait_page_load import wait_page_load
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from time import sleep
 
 def transfer_digisign(driver, url_dict, session_id, vsidpw, dlist):
     tempWait = WebDriverWait(driver, 300)
@@ -26,14 +25,14 @@ def transfer_digisign(driver, url_dict, session_id, vsidpw, dlist):
             wait_page_load(driver)
             txbEmpNO = tempWait.until(EC.text_to_be_present_in_element_value((By.CSS_SELECTOR, url_dict['digi_doc_id']), str(doctor_id)))
             if txbEmpNO == True:
-                wait_page_load(driver)
-                try:
-                    refresh_btn_ele = tempWait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, url_dict['digi_refresh_btn'])))
-                except:
-                    sleep(3)
-                    refresh_btn_ele = tempWait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, url_dict['digi_refresh_btn'])))
-                finally:
-                    refresh_btn_ele.click()
+                while True:
+                    wait_page_load(driver)
+                    try:
+                        refresh_btn_ele = tempWait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, url_dict['digi_refresh_btn'])))
+                        refresh_btn_ele.click()
+                        break
+                    except:
+                        pass
                 wait_page_load(driver)
                 show_of_digisign = tempWait.until(EC.text_to_be_present_in_element((By.CSS_SELECTOR, url_dict['digi_count_text']), '筆'))
                 if show_of_digisign == True:
@@ -60,10 +59,14 @@ def transfer_digisign(driver, url_dict, session_id, vsidpw, dlist):
                                     pass
                         driver.find_element_by_css_selector(url_dict['digi_new_id']).send_keys(vsidpw['id'])
                         driver.find_element_by_css_selector(url_dict['digi_tran_btn']).click()
-                        wait_page_load(driver)
-                        txbEmpNoNew = tempWait.until(EC.text_to_be_present_in_element_value((By.CSS_SELECTOR, url_dict['digi_new_id']), str(vsidpw['id'])))
-                        if txbEmpNoNew == True:
-                            driver.find_element_by_css_selector(url_dict['digi_tran_btn']).click()
+                        while True:
+                            wait_page_load(driver)
+                            txbEmpNoNew = tempWait.until(EC.text_to_be_present_in_element_value((By.CSS_SELECTOR, url_dict['digi_new_id']), str(vsidpw['id'])))
+                            if txbEmpNoNew == True:
+                                driver.find_element_by_css_selector(url_dict['digi_tran_btn']).click()
+                                break
+                            else:
+                                pass
                         try: 
                             wait_page_load(driver)
                             tempWait.until(EC.alert_is_present())
