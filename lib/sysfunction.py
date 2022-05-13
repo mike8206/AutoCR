@@ -39,7 +39,7 @@ def initialurl(url_path):
         'portal_url': 'http://portal.ntuh.gov.tw/General/Login.aspx',
         'digisign_replace_url': 'http://ihisaw.ntuh.gov.tw/WebApplication/DigitalSignature/DSExecuteEmpReplace.aspx?SESSION=',
         'digisign_background_url': 'http://ihisaw.ntuh.gov.tw/WebApplication/DigitalSignature/BackGroundDS.aspx?SESSION=',
-        'open_clinic_url': "http://hisaw.ntuh.gov.tw/WebApplication/Clinics/OpenClinics.aspx?SESSION=",
+        'open_clinic_url': "http://hisaw.ntuh.gov.tw/WebApplication/Clinics/OpenClinicsByClinicNo.aspx?SESSION=",
         'send_sms_url': "http://ihisaw.ntuh.gov.tw/WebApplication/OtherIndependentProj/CriticalVentilator/MessageSend.aspx?SESSION=",
         'hosp_name': '總院區',
         'dept_name': '家庭醫學部',
