@@ -32,10 +32,10 @@ def transfer_digisign(driver, url_dict, session_id, vsidpw, dlist):
                         refresh_btn_ele.click()
                         break
                     except:
-                        pass
+                        continue
                 wait_page_load(driver)
                 show_of_digisign = tempWait.until(EC.text_to_be_present_in_element((By.CSS_SELECTOR, url_dict['digi_count_text']), '筆'))
-                if show_of_digisign == True:
+                if show_of_digisign:
                     num_of_digisign = driver.find_element_by_css_selector(url_dict['digi_count_text'])
                     # skip if nothing to sign
                     if  num_of_digisign.text == '0筆':
@@ -56,7 +56,7 @@ def transfer_digisign(driver, url_dict, session_id, vsidpw, dlist):
                                     if(checkbox2==True):
                                         checkbox_checked = True            
                                 except:
-                                    pass
+                                    continue
                         driver.find_element_by_css_selector(url_dict['digi_new_id']).send_keys(vsidpw['id'])
                         driver.find_element_by_css_selector(url_dict['digi_tran_btn']).click()
                         while True:
@@ -66,14 +66,14 @@ def transfer_digisign(driver, url_dict, session_id, vsidpw, dlist):
                                 driver.find_element_by_css_selector(url_dict['digi_tran_btn']).click()
                                 break
                             else:
-                                pass
+                                continue
                         try: 
                             wait_page_load(driver)
                             tempWait.until(EC.alert_is_present())
                             alert = driver.switch_to.alert
                             alert.accept()
                         except:
-                            pass
+                            continue
                 else:
                     continue
             else:
