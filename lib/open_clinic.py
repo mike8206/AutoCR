@@ -22,13 +22,11 @@ def open_clinic(driver_ie, url_dict, session_id):
 
     # select clinic & AMPM
     hosp_list_ele.select_by_visible_text(url_dict['hosp_name'])
-    wait_page_load(driver_ie)
     dept_list_ele.select_by_visible_text(url_dict['dept_name'])
-    wait_page_load(driver_ie)
     if 7 <= int(nowhour) <= 10:
-        ampm_list_ele.select_by_visible_text('上午')
+        ampm_list_ele.select_by_value('1') # 1=上午, 2=下午, 3=夜間
     elif 11 <= int(nowhour) <= 14 :
-        ampm_list_ele.select_by_visible_text('下午')
+        ampm_list_ele.select_by_value('2')
     else:
         raise ValueError('不是開診時間!')
 
