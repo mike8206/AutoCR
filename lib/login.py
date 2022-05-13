@@ -36,5 +36,5 @@ def login(driver, url_dict, idpw): # go to NTUH portal homepage
             return session_id
         except:
             retrycount = retrycount +1
-            pass
+            continue
     raise ValueError('登入失敗已達3次!!')
