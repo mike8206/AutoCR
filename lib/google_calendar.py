@@ -27,10 +27,10 @@ def start_end_time():
         endtime =  (datetime(tomorrow.year, tomorrow.month, tomorrow.day, 00, 00)).isoformat() + 'Z'
     else:
         weekday = today.weekday()
-        if weekday >= 5:
-            if weekday == 5:
+        if weekday >= 4:
+            if weekday == 4:
                 monday = today + timedelta(days=3)       
-            elif weekday == 6:
+            elif weekday == 5:
                 monday = today + timedelta(days=2)
             else:
                 monday = today + timedelta(days=1)
