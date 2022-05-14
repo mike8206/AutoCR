@@ -1,9 +1,9 @@
 from selenium import webdriver
 
-# customed functions
+# customized functions
 from lib.google_calendar import google_calendar
 from lib.login import login
-from lib.send_sms import send_sms
+from lib.sms_send import sms_send
 
 # options
 TIMEOUT = 5
@@ -37,6 +37,6 @@ def main(url_dict, cr_id_path, phone_path, google_secret_path, google_token_path
         # login using chrome and get the session id
         session_id = login(driver, url_dict, cridpw)
         # send sms
-        send_sms(driver, url_dict, session_id, phone_list, SMSstring)
+        sms_send(driver, url_dict, session_id, phone_list, SMSstring)
     else:
         raise ValueError('未設定Google日曆ID!!')

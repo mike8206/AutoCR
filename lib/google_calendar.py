@@ -20,7 +20,7 @@ am = False
 if int(nowhour) < 12:
     am = True
 
-def start_end_time():
+def startEndTime():
     if am == True:
         tomorrow = today + timedelta(days=1)
         starttime = (datetime(today.year, today.month, today.day, today.hour, today.minute)).isoformat() + 'Z'
@@ -42,17 +42,17 @@ def start_end_time():
             dayaftertomorrow = today + timedelta(days=2)
             starttime = (datetime(tomorrow.year, tomorrow.month, tomorrow.day, 00, 00)).isoformat() + 'Z'
             endtime =  (datetime(dayaftertomorrow.year, dayaftertomorrow.month, dayaftertomorrow.day, 00, 00)).isoformat() + 'Z'
-    startendtime = [starttime, endtime]
-    return startendtime
+    start_end_time = [starttime, endtime]
+    return start_end_time
 
-def date_week_string(starttime):
+def dateWeekToString(starttime):
     date = datetime.strptime(starttime, "%Y-%m-%dT%H:%M:%S%z")
-    weekstring = week_day(date)
+    weekstring = weekdayToString(date)
     datestring = date.strftime('%m/%d')
     dateweekstring = datestring+weekstring
     return dateweekstring
     
-def week_day(date):
+def weekdayToString(date):
     weekday = date.weekday()
     if weekday == 0:
         weekstring = "（一）"
@@ -68,7 +68,7 @@ def week_day(date):
         weekstring = ""
     return weekstring
 
-def SMS_string(events, starttime):
+def eventToSmsString(events, starttime):
     eventlist = []
     eventstring = ''
     if not events:
@@ -94,7 +94,7 @@ def SMS_string(events, starttime):
         if eventstring == '':
             SMSstring = "各位同仁辛苦了，請記得電子簽章。"
         else:
-            SMSstring = "各位同仁辛苦了，請記得電子簽章，"+date_week_string(starttime)+eventstring
+            SMSstring = "各位同仁辛苦了，請記得電子簽章，"+dateWeekToString(starttime)+eventstring
     return SMSstring
 
 def google_calendar(google_secret_path, google_token_path, google_cal_id):
@@ -111,7 +111,7 @@ def google_calendar(google_secret_path, google_token_path, google_cal_id):
         with open(google_token_path, 'w') as token:
             token.write(creds.to_json())
     
-    startendtime = start_end_time()
+    start_end_time = startEndTime()
 
     try:
         service = build('calendar', 'v3', credentials=creds)
@@ -119,13 +119,13 @@ def google_calendar(google_secret_path, google_token_path, google_cal_id):
         # Call the Calendar API
         for calendar in google_cal_id:
             try:
-                calendar_result = service.events().list(calendarId=calendar, timeMin=startendtime[0], timeMax = startendtime[1],
+                calendar_result = service.events().list(calendarId=calendar, timeMin=start_end_time[0], timeMax = start_end_time[1],
                                                     singleEvents=True, orderBy='startTime').execute()
                 events = calendar_result.get('items', [])
                 event_list.extend(events)
             except:
                 continue
-        SMSstring = SMS_string(event_list, startendtime[0])
+        SMSstring = eventToSmsString(event_list, start_end_time[0])
         return SMSstring
     
     except HttpError as error:

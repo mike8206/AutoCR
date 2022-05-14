@@ -1,8 +1,8 @@
 from selenium import webdriver
 
-# customed functions
+# customized functions
 from lib.login import login
-from lib.open_clinic import open_clinic
+from lib.clinic_open import clinic_open
 
 # options
 TIMEOUT = 5
@@ -35,4 +35,4 @@ def main(url_dict, vs_id_path, chrome_driver_path, ie_driver_path):
     driver_ie = webdriver.Ie(ie_driver_path, options = ie_options)
     driver_ie.implicitly_wait(TIMEOUT)
     # open IE for open clinic
-    open_clinic(driver_ie, url_dict, session_id)
+    clinic_open(driver_ie, url_dict, session_id)
