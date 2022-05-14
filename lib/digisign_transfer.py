@@ -47,17 +47,17 @@ def digisign_transfer(driver, url_dict, session_id, vsidpw, dlist):
                         # select all digisign items
                         checkbox_checked = False
                         while checkbox_checked == False:
-                            try: 
-                                driver.find_element(By.ID, url_dict['digi_EMR_cbx']).click() # 醫囑/病歷紀錄
-                                checkbox1=driver.find_element(By.ID, url_dict['digi_EMR_cbx']).is_selected()
-                                if(checkbox1==True):
+                            try:
+                                EMR_cbx = driver.find_element(By.ID, url_dict['digi_EMR_cbx']) # 醫囑/病歷紀錄
+                                if EMR_cbx.is_selected() != True:
+                                    EMR_cbx.click()
                                     checkbox_checked = True
                             except:
                                 try:
-                                    driver.find_element(By.ID, url_dict['digi_DRUG_cbx']).click() # 給藥紀錄 (2021.04.10 revise)
-                                    checkbox2=driver.find_element(By.ID, url_dict['digi_DRUG_cbx']).is_selected()
-                                    if(checkbox2==True):
-                                        checkbox_checked = True            
+                                    DRUG_cbx = driver.find_element(By.ID, url_dict['digi_DRUG_cbx']) # 給藥紀錄
+                                    if DRUG_cbx.is_selected() != True:
+                                        DRUG_cbx.click()
+                                        checkbox_checked = True
                                 except:
                                     continue
                         driver.find_element(By.ID, url_dict['digi_new_id']).send_keys(vsidpw['id'])
