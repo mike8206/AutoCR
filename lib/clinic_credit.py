@@ -48,34 +48,35 @@ def clinic_credit(driver, url_dict, session_id, vscredclinic):
                     clinic_all_pt.click()
                 wait_page_load(driver)
                 number = 0
-                strNum = str(number).zfill(2)
-                ptBTN = url_dict['clinic_pt_prefix']+strNum+url_dict['clinic_pt_suffix']
-                try:
-                    pt_tag_ele = driver.find_element(By.ID, ptBTN)
-                    if chkPtBtn(pt_tag_ele):
-                        ptBTN.click()
-                        wait_page_load(driver)
-                        # 開檔
-                        if 'MedicalManagementAuthor.aspx' in driver.current_url:
-                            driver.find_element(By.ID, 'RBList').click()
-                            driver.find_element(By.ID, 'ConfirmButton').click()
+                while True:
+                    strNum = str(number).zfill(2)
+                    ptBTN = url_dict['clinic_pt_prefix']+strNum+url_dict['clinic_pt_suffix']
+                    try:
+                        pt_tag_ele = driver.find_element(By.ID, ptBTN)
+                        if chkPtBtn(pt_tag_ele):
+                            ptBTN.click()
                             wait_page_load(driver)
-                        # 修改申報
-                        driver.find_element(By.ID, url_dict['clinic_ptpage_other_func']).click()
-                        wait_page_load(driver)
-                        driver.find_element(By.ID, url_dict['clinic_ptpage_change_cred']).click()
-                        wait_page_load(driver)
-                        cred_input_ele = driver.find_element(By.ID, url_dict['clinic_cred_input'])
-                        cred_input_ele.clear()
-                        cred_input_ele.send_keys(vscredclinic['credvsid'])
-                        driver.find_element(By.ID, url_dict['clinic_cred_change_btn']).click()
-                        wait_page_load(driver)
-                        driver.find_element(By.ID, url_dict['clinic_cred_return_pt']).click()
-                        wait_page_load(driver)
-                        driver.find_element(By.ID, url_dict['clinic_ptpage_return']).click()
-                    number +=1
-                except:
-                    continue
+                            # 開檔
+                            if 'MedicalManagementAuthor.aspx' in driver.current_url:
+                                driver.find_element(By.ID, 'RBList').click()
+                                driver.find_element(By.ID, 'ConfirmButton').click()
+                                wait_page_load(driver)
+                            # 修改申報
+                            driver.find_element(By.ID, url_dict['clinic_ptpage_other_func']).click()
+                            wait_page_load(driver)
+                            driver.find_element(By.ID, url_dict['clinic_ptpage_change_cred']).click()
+                            wait_page_load(driver)
+                            cred_input_ele = driver.find_element(By.ID, url_dict['clinic_cred_input'])
+                            cred_input_ele.clear()
+                            cred_input_ele.send_keys(vscredclinic['credvsid'])
+                            driver.find_element(By.ID, url_dict['clinic_cred_change_btn']).click()
+                            wait_page_load(driver)
+                            driver.find_element(By.ID, url_dict['clinic_cred_return_pt']).click()
+                            wait_page_load(driver)
+                            driver.find_element(By.ID, url_dict['clinic_ptpage_return']).click()
+                        number +=1
+                    except:
+                        break
         except:
             continue
     driver.quit()
