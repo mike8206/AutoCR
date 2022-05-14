@@ -5,7 +5,7 @@ from selenium.webdriver.common.by import By
 from lib.wait_page_load import wait_page_load
 
 def chkPtBtn(pt_tag_ele):
-    color = pt_tag_ele.value_of_css_property('backgroundColor')
+    color = pt_tag_ele.value_of_css_property('color')
     if color in ('orangered', 'hotpink'):
         return True
     else:
@@ -43,7 +43,9 @@ def clinic_credit(driver, url_dict, session_id, vscredclinic):
             if clinic_tag_ele:
                 clinic_tag_ele.click()
                 wait_page_load(driver)
-                driver.find_element(By.ID, url_dict['clinic_all_pt_btn']).click()
+                clinic_all_pt = driver.find_element(By.ID, url_dict['clinic_all_pt_btn'])
+                if clinic_all_pt.is_selected() != True:
+                    clinic_all_pt.click()
                 wait_page_load(driver)
                 number = 0
                 strNum = str(number).zfill(2)
@@ -71,6 +73,7 @@ def clinic_credit(driver, url_dict, session_id, vscredclinic):
                         driver.find_element(By.ID, url_dict['clinic_cred_return_pt']).click()
                         wait_page_load(driver)
                         driver.find_element(By.ID, url_dict['clinic_ptpage_return']).click()
+                        number +=1
                 except:
                     continue
         except:
