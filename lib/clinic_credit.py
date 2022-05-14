@@ -73,7 +73,7 @@ def clinic_credit(driver, url_dict, session_id, vscredclinic):
                         driver.find_element(By.ID, url_dict['clinic_cred_return_pt']).click()
                         wait_page_load(driver)
                         driver.find_element(By.ID, url_dict['clinic_ptpage_return']).click()
-                        number +=1
+                    number +=1
                 except:
                     continue
         except:
