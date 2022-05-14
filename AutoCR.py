@@ -6,7 +6,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
 import json
-from lib import autodigisign, autoopenclinic, autosms, sysfunction
+from lib import sys_func, autodigisign, autoopenclinic, autosms, autocredit
 
 # file path
 config_path = 'sys\config.txt'
@@ -25,24 +25,24 @@ try:
         s = file.read()
         config_dict = json.loads(s)
 except:
-    config_dict = sysfunction.initialconfig(config_path)
+    config_dict = sys_func.initialConfig(config_path)
 
 try:
     with open(config_dict['url_path'], encoding="UTF-8") as file:
         s = file.read()
         url_dict = json.loads(s)
 except:
-    url_dict = sysfunction.initialurl(config_dict['url_path'])
+    url_dict = sys_func.initialUrl(config_dict['url_path'])
 
 # functions
 def digisign():
     autodigisign.main(url_dict, config_dict['vs_id_path'], config_dict['list_path'], chrome_driver_path, ie_driver_path)
-
 def openclnc():
     autoopenclinic.main(url_dict, config_dict['vs_id_path'], chrome_driver_path, ie_driver_path)
-
 def sms():
     autosms.main(url_dict, config_dict['cr_id_path'], config_dict['phone_path'], config_dict['google_secret_path'], config_dict['google_token_path'], config_dict['google_cal_id'], chrome_driver_path)
+def autocred():
+    autocredit.main(url_dict, config_dict['cr_id_path'], chrome_driver_path)
 
 # main function
 def main():
@@ -195,7 +195,7 @@ def main():
 
     # initial setup
     if config_dict['setup'] == False:
-        sysfunction.check_file_exist(config_dict)
+        sys_func.checkFileExist(config_dict)
         config_dict.update(setup = True)
 
     scheduler = BackgroundScheduler()
@@ -206,13 +206,13 @@ def main():
 
     while True:
         window, event, values = sg.read_all_windows(timeout=100)
-        if event == '-EXIT-':
+        if event == '-EXIT-' or event == sg.WIN_CLOSED:
             window.close()
             if window == window2:
                 window2 = None
                 window1 = make_window(config_dict)
             elif window == window1:
-                sysfunction.save_config(config_dict, values, config_path)
+                sys_func.saveConfig(config_dict, values, config_path)
                 break
         if scheduler.running != True:
             scheduler.start()
@@ -237,7 +237,7 @@ def main():
         if event == '-AUTOOCR-':
             try:
                 if exists(config_dict['autoocr_path']):
-                    subprocess.Popen([config_dict['autoocr_path']])
+                    subprocess.Popen([config_dict['autoocr_path']], shell=True)
             except:
                 sg.Popup('尚未實裝!')
         if event in ('-VSLOGIN-', '-CRLOGIN-'):
@@ -254,11 +254,7 @@ def main():
             except:
                 sg.Popup('尚未實裝!')
         if event == '-AUTOCREDIT-':
-            try:
-                if exists(config_dict['autocredit_path']):
-                    subprocess.Popen([config_dict['autocredit_path']])
-            except:
-                sg.Popup('尚未實裝!')
+            scheduler.add_job(autocred, id='手動執行自動改績效')
         if event == '-FINDPHONECLINIC-':
             try:
                 if exists(config_dict['findphoneclinic_path']):
@@ -272,37 +268,34 @@ def main():
             except:
                 sg.Popup('尚未實裝!')
         if event == '-SAVECONFIG-':
-            sysfunction.save_config(config_dict, values, config_path)
+            sys_func.saveConfig(config_dict, values, config_path)
             sg.Popup("已成功儲存設定!")
         if event == '-CHANGESYS-' and not window2:
-            window2 = sysfunction.change_sys()
+            window2 = sys_func.changeSysFunction()
             window.close()
         if event == '-CHANGEVS-':
-            sysfunction.saveidpw('VS', config_dict['vs_id_path'])
+            sys_func.saveIdPw('VS', config_dict['vs_id_path'])
         if event == '-CHANGECR-':
-            sysfunction.saveidpw('CR', config_dict['cr_id_path'])
+            sys_func.saveIdPw('CR', config_dict['cr_id_path'])
         if event == '-CHANGESIGN-':
-            sysfunction.savelist("sign", config_dict['list_path'])
+            sys_func.saveList("sign", config_dict['list_path'])
         if event == '-CHANGESMS-':
-            sysfunction.savelist("phone", config_dict['phone_path'])
+            sys_func.saveList("phone", config_dict['phone_path'])
         if event == '-CHANGECALID-':
-            config_dict.update(google_cal_id = sysfunction.savegooglecalid())
+            config_dict.update(google_cal_id = sys_func.saveGoogleCalnId(config_dict['google_cal_id']))
         if event == '-CHANGECERT-':
-            sysfunction.savegooglefile(config_dict['google_secret_path'], config_dict['google_token_path'])
+            sys_func.saveGoogleFile(config_dict['google_secret_path'], config_dict['google_token_path'])
         if event == '-CHANGETHEME-':
             event, values = sg.Window('變更風格', [[sg.Combo(sg.theme_list(), readonly=True, k='-THEME LIST-'), sg.OK(), sg.Cancel()]], finalize=True).read(close=True)
             if values['-THEME LIST-'] !='' and values['-THEME LIST-'] != sg.theme():
                 config_dict['theme'] = sg.theme(values['-THEME LIST-'])
         if event == '-OPENFUNCTION-':
-            sysfunction.openotherfunction(config_dict)
+            sys_func.openOtherFunction(config_dict)
         if event == '-CHECKFILE-':
             sg.Popup("重新檢測檔案!")
-            sysfunction.check_file_exist(config_dict)
+            sys_func.checkFileExist(config_dict)
         if event == '-CHANGEURL-':
-            sysfunction.changeurl(config_dict['url_path'])
-        if event == sg.WIN_CLOSED:
-            sysfunction.save_config(config_dict, values, config_path)
-            break
+            sys_func.changeUrlElement(config_dict['url_path'])
     scheduler.shutdown()
 
 if __name__ == '__main__':    
