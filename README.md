@@ -1,34 +1,48 @@
 # AutoCR
 
+## 簡介
+為減輕在各寶山行政壓力，在學長姐們的傳承下，此軟體因此誕生!!
+
+## 特別感謝
+感謝 *哲瑞學長、孟馨老公*及*前輩*的努力!!
+
+## 功能特色
+* 自動簽章、開診、寄簡訊、改績效
+* 初次設定檔案檢查
+* 模組化設定，可自定義網址元素
+------
 ## 更新部分
-* 新增簽章、開診、寄簡訊功能
-* 模組化設定
-* 可自定義網址元素
-* 初次設定提醒
+* 新增自動改績效功能
 * 重定向檔案結構
-> 將chromedriver, IEDriverServer32放在sys目錄下
-> 將驗證碼寫入檔案，便於ddddocr讀取
-
-* 整合自動登入帳號密碼+簽章清單
-> LoginID.txt 架構為三行，去除前綴字典key碼
-
+* 更新Selenium變數、更新網址參數
 ------
 ## 預計更新
-1. 更新驗證碼程式
-2. 自動登入
-3. 自動改績效
-
+* 自動查電話(診間及超音波)
+* 將驗證碼寫入暫存檔傳遞(目前仍用寫入檔案便於ddddocr讀取)
+------
+## 使用前注意事項
+1. 將符合電腦版本的chromedriver, IEDriverServer32放在sys目錄下
+2. 若不想加入Google行事曆預設primary，可至sys\\sys_config.txt設定
+3. CR或VS登入文字檔架構為三行
+------
 ## 打包方式
-1. 安裝pyinstaller
-2. 更新spec檔案內packages位置：
+1. 安裝以下程式
 ```
-pathex=['C:\\python.3.9\\localcache\\local-packages'],
+pip install --upgrade pyinstaller selenium pySimpleGUI pytz requests json ddddocr google-api-python-client google-auth-httplib2 google-auth-oauthlib
 ```
-3. 將ddddocr在python package內的common.onnx檔案放置到Digisign.py相同目錄下，並更新spec檔案
+2. 依照自己電腦安裝package的位置，更新spec檔案內pathx變數：
+> pathex=['C:\\python.3.9\\localcache\\local-packages'],
+3. 將ddddocr在python package內的common.onnx檔案複製到與spec相同目錄下，並更新spec檔案：
+> datas=[('./common.onnx','ddddocr')],
+4. 在AutoCR.py及AutoCR.spec資料夾內打開終端，使用指令pyinstaller打包成exe檔
 ```
-datas=[('./common.onnx','ddddocr')],
+pyinstaller AutoCR.spec
 ```
-4. 在Digisign.py及Digisign.spec資料夾內打開終端，使用指令pyinstaller打包成exe檔
+------
+## Troubleshoot
+1. 目前 ddddocr 僅支援 Python version <=3.9
+2. pyinstaller無法執行，可使用以下指令檢查安裝位置
 ```
-pyinstaller A.spec
+pip uninstall pyinstaller
 ```
+3. 其他錯誤可在sys\\error_log.txt查詢
