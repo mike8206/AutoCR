@@ -174,7 +174,7 @@ def main():
             ]),
             sg.Frame('執行結果', layout=[
                 [sg.Multiline(size=(80, 4), disabled=True, autoscroll=True , auto_refresh=True, key='-LOG-')],
-                [sg.Push(), sg.Text('Version: 1.0.2, Credit by: 吳璨宇, 2022/05/10')]
+                [sg.Push(), sg.Text('Version: 1.0.5, Credit by: 吳璨宇, 2022/05/15')]
             ])]
         ])
 
