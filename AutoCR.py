@@ -35,6 +35,9 @@ except:
     url_dict = sys_func.initialUrl(config_dict['url_path'])
 
 # functions
+def error_log(error_msg):
+    with open(error_log_path, 'a', encoding="UTF-8") as file:
+        file.write(error_msg+"\n")
 def digisign():
     autodigisign.main(url_dict, config_dict['vs_id_path'], config_dict['list_path'], chrome_driver_path, ie_driver_path)
 def openclnc():
@@ -72,10 +75,6 @@ def main():
         with open(log_path, 'r', encoding="UTF-8") as file: 
             console_log = file.read()
             window1['-LOG-'].update(console_log)
-
-    def error_log(error_msg):
-        with open(error_log_path, 'a', encoding="UTF-8") as file:
-            file.write(error_msg+"\n")
         
     def schdlr_cron_format(hr, min, hrrepeat):
         hr = hr % 24
@@ -258,9 +257,9 @@ def main():
         if event == '-AUTOCREDIT-':
             scheduler.add_job(autocred, id='手動執行自動改績效')
         if event == '-FINDPHONECLINIC-':
-            scheduler.add_job(autophone('clinic'), id='手動執行診間查電話')
+            scheduler.add_job(autophone, args=['clinic'], id='手動執行診間查電話')
         if event == '-FINDPHONEEXAM-':
-            scheduler.add_job(autophone('exam'), id='手動執行檢查查電話')
+            scheduler.add_job(autophone, args=['exam'], id='手動執行檢查查電話')
         if event == '-SAVECONFIG-':
             sys_func.saveConfig(config_dict, values, config_path)
             sg.Popup("已成功儲存設定!")
@@ -283,6 +282,9 @@ def main():
             event, values = sg.Window('變更風格', [[sg.Combo(sg.theme_list(), readonly=True, k='-THEME LIST-'), sg.OK(), sg.Cancel()]], finalize=True).read(close=True)
             if values['-THEME LIST-'] !='' and values['-THEME LIST-'] != sg.theme():
                 config_dict['theme'] = sg.theme(values['-THEME LIST-'])
+                sg.theme(values['-THEME LIST-'])
+                window2 = sys_func.changeSysFunction()
+                window.close()
         if event == '-OPENFUNCTION-':
             sys_func.openOtherFunction(config_dict)
         if event == '-CHECKFILE-':
@@ -292,5 +294,8 @@ def main():
             sys_func.changeUrlElement(config_dict['url_path'])
     scheduler.shutdown()
 
-if __name__ == '__main__':    
-    main()
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as error:
+        error_log(error)
