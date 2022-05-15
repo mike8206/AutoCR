@@ -34,7 +34,7 @@ v1.0.5
 ## 打包方式
 1. 安裝以下程式
 ```
-pip install --upgrade pyinstaller selenium pySimpleGUI pytz requests ddddocr pandas google-api-python-client google-auth-httplib2 google-auth-oauthlib
+pip install --upgrade pyinstaller selenium pySimpleGUI apscheduler pytz requests ddddocr pandas google-api-python-client google-auth-httplib2 google-auth-oauthlib
 ```
 2. 依照自己電腦安裝package的位置，更新spec檔案內pathx變數：
 > pathex=['C:\\python.3.9\\localcache\\local-packages'],
