@@ -6,7 +6,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
 import json
-from lib import sys_func, autodigisign, autoopenclinic, autosms, autocredit
+from lib import sys_func, autodigisign, autoopenclinic, autosms, autocredit, autogetphone
 
 # file path
 config_path = 'sys\config.txt'
@@ -43,6 +43,8 @@ def sms():
     autosms.main(url_dict, config_dict['cr_id_path'], config_dict['phone_path'], config_dict['google_secret_path'], config_dict['google_token_path'], config_dict['google_cal_id'], chrome_driver_path)
 def autocred():
     autocredit.main(url_dict, config_dict['cr_id_path'], chrome_driver_path)
+def autophone(origin_type):
+    autogetphone.main(url_dict, config_dict['cr_id_path'], origin_type, chrome_driver_path)
 
 # main function
 def main():
@@ -185,8 +187,8 @@ def main():
                 [sg.Button('自動改績效', key='-AUTOCREDIT-', size=(10,1))],
             ])],
             [sg.Frame('其他功能', layout=[
-                [sg.Button('查診間電話', key='-FINDPHONECLINIC-', size=(10,1))],
-                [sg.Button('查超音波電話', key='-FINDPHONEECHO-', size=(10,1))],
+                [sg.Button('診間查電話', key='-FINDPHONECLINIC-', size=(10,1))],
+                [sg.Button('檢查查電話', key='-FINDPHONEEXAM-', size=(10,1))],
             ])],
         ], vertical_alignment='t')
 
@@ -237,7 +239,7 @@ def main():
         if event == '-AUTOOCR-':
             try:
                 if exists(config_dict['autoocr_path']):
-                    subprocess.Popen([config_dict['autoocr_path']], shell=True)
+                    subprocess.Popen([config_dict['autoocr_path']])
             except:
                 sg.Popup('尚未實裝!')
         if event in ('-VSLOGIN-', '-CRLOGIN-'):
@@ -256,17 +258,9 @@ def main():
         if event == '-AUTOCREDIT-':
             scheduler.add_job(autocred, id='手動執行自動改績效')
         if event == '-FINDPHONECLINIC-':
-            try:
-                if exists(config_dict['findphoneclinic_path']):
-                    subprocess.Popen([config_dict['findphoneclinic_path']])
-            except:
-                sg.Popup('尚未實裝!')
-        if event == '-FINDPHONEECHO-':
-            try:
-                if exists(config_dict['findphoneecho_path']):
-                    subprocess.Popen([config_dict['findphoneecho_path']])
-            except:
-                sg.Popup('尚未實裝!')
+            scheduler.add_job(autophone('clinic'), id='手動執行診間查電話')
+        if event == '-FINDPHONEEXAM-':
+            scheduler.add_job(autophone('exam'), id='手動執行檢查查電話')
         if event == '-SAVECONFIG-':
             sys_func.saveConfig(config_dict, values, config_path)
             sg.Popup("已成功儲存設定!")
