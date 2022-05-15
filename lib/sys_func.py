@@ -254,12 +254,10 @@ def openOtherFunction(config_dict):
                     [sg.Text(), sg.FileBrowse(file_types=(("執行檔", "*.exe"), ), key='-autoocr-')],
                     [sg.Text('IE自動登入: ')],
                     [sg.Text(), sg.FileBrowse(file_types=(("VBS檔", "*.vbs"), ), key='-ielogin-')],
-                    [sg.Text('自動改績效: ')],
-                    [sg.Text(), sg.FileBrowse(file_types=(("執行檔", "*.exe"), ), key='-autocredit-')],
-                    [sg.Text('查診間電話: ')],
-                    [sg.Text(), sg.FileBrowse(file_types=(("執行檔", "*.exe"), ), key='-findphoneclinic-')],
-                    [sg.Text('查超音波電話: ')],
-                    [sg.Text(), sg.FileBrowse(file_types=(("執行檔", "*.exe"), ), key='-findphoneecho-')],
+                    [sg.Text('晨科會排班: ')],
+                    [sg.Text(), sg.FileBrowse(file_types=(("執行檔", "*.exe"), ), key='-monthsched-')],
+                    [sg.Text('一鍵搬影片: ')],
+                    [sg.Text(), sg.FileBrowse(file_types=(("執行檔", "*.exe"), ), key='-movevideo-')],
                     [sg.Push(), sg.OK(size=(10,1)), sg.Cancel(), sg.Push()]]]
         event, values = sg.Window('開啟額外功能', layout).read(close=True)
         if event == 'OK':
@@ -267,12 +265,10 @@ def openOtherFunction(config_dict):
                 config_dict.update(autoocr_path = relpath(values['-autoocr-']))
             if values['-ielogin-'] !='':
                 config_dict.update(login_path = relpath(values['-ielogin-']))
-            if values['-autocredit-'] !='':
-                config_dict.update(autocredit_path = relpath(values['-autocredit-']))
-            if values['-findphoneclinic-'] !='':
-                config_dict.update(findphoneclinic_path = relpath(values['-findphoneclinic-']))
-            if values['-findphoneecho-'] !='':
-                config_dict.update(findphoneecho_path = relpath(values['-findphoneecho-']))
+            if values['-monthsched-'] !='':
+                config_dict.update(monthsched_path = relpath(values['-monthsched-']))
+            if values['-movevideo-'] !='':
+                config_dict.update(movevideo_path = relpath(values['-movevideo-']))
             sg.Popup('額外功能設定完成!')
             break
         else:
