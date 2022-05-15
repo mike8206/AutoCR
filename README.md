@@ -7,18 +7,24 @@
 感謝 *哲瑞學長、孟馨老公*及*前輩*的努力!!
 
 ## 功能特色
-* 自動簽章、開診、寄簡訊、改績效
-* 初次設定檔案檢查
-* 模組化設定，可自定義網址元素
+1. 自動簽章
+2. 自動開診
+3. 自動寄簡訊
+4. 一鍵改績效(尚未測試)
+5. 一鍵查電話(尚未測試)
+6. 初次設定檔案檢查
+7. 模組化設定
+8. 可自定義網址元素
 ------
 ## 更新部分
-* 新增自動改績效功能
-* 重定向檔案結構
-* 更新Selenium變數、更新網址參數
+v1.0.5
+* 新增自動查電話(診間及檢查)
+* 更新網址參數
 ------
 ## 預計更新
-* 自動查電話(診間及超音波)
 * 將驗證碼寫入暫存檔傳遞(目前仍用寫入檔案便於ddddocr讀取)
+* 急診挑好菜
+* 病房病床管理
 ------
 ## 使用前注意事項
 1. 將符合電腦版本的chromedriver, IEDriverServer32放在sys目錄下
@@ -28,7 +34,7 @@
 ## 打包方式
 1. 安裝以下程式
 ```
-pip install --upgrade pyinstaller selenium pySimpleGUI pytz requests json ddddocr google-api-python-client google-auth-httplib2 google-auth-oauthlib
+pip install --upgrade pyinstaller selenium pySimpleGUI pytz requests json ddddocr pandas google-api-python-client google-auth-httplib2 google-auth-oauthlib
 ```
 2. 依照自己電腦安裝package的位置，更新spec檔案內pathx變數：
 > pathex=['C:\\python.3.9\\localcache\\local-packages'],
