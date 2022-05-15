@@ -7,7 +7,7 @@ from pytz import timezone
 # customized functions
 from lib.wait_page_load import wait_page_load
 
-def getDropListEle(driver, url_dict, session_id):
+def getClinicDropListEle(driver, url_dict, session_id):
     driver.get(url_dict['open_clinic_url'] + session_id)
     wait_page_load(driver)
     Dept_list = []
@@ -96,7 +96,7 @@ def clinic_query(driver, url_dict, session_id):
     taiwan_taipei = timezone('Asia/Taipei')
     today = datetime.now(taiwan_taipei)
     clinic_arg = {}
-    clinic_ele_values = getDropListEle(driver, url_dict, session_id)
+    clinic_ele_values = getClinicDropListEle(driver, url_dict, session_id)
 
     event, values = sg.Window('選擇變更診間日期', [
         [sg.Text('院區：'),sg.Combo([url_dict['hosp_name']], default_value=url_dict['hosp_name'], size=(8, 1), readonly=True, k='HOSP')],
@@ -113,3 +113,40 @@ def clinic_query(driver, url_dict, session_id):
         return vscredclinic
     else:
         sg.Popup('已停止改績效功能!')
+
+def clinicGetPatientList(driver, url_dict, session_id, clinic_arg):
+    driver.get(url_dict['open_clinic_url'] + session_id)
+    driver.minimize_window()
+    wait_page_load(driver)
+    
+    # find all elements
+    Select(driver.find_element(By.ID, url_dict['clinic_hosp_list'])).select_by_visible_text(clinic_arg['HOSP'])
+    Select(driver.find_element(By.ID, url_dict['clinic_dept_list'])).select_by_visible_text(clinic_arg['DEPT'])
+    Select(driver.find_element(By.ID, url_dict['clinic_ampm_list'])).select_by_visible_text(clinic_arg['AMPM'])
+    year_input_ele = driver.find_element(By.ID, url_dict['clinic_year'])
+    month_input_ele = driver.find_element(By.ID, url_dict['clinic_month'])
+    day_input_ele = driver.find_element(By.ID, url_dict['clinic_day'])
+    clinic_input_ele = driver.find_element(By.ID, url_dict['clinic_num_input'])
+    year_input_ele.clear()
+    month_input_ele.clear()
+    day_input_ele.clear()
+    clinic_input_ele.clear()
+    year_input_ele.send_keys(clinic_arg['YEAR'])
+    month_input_ele.send_keys(clinic_arg['MONTH'])
+    day_input_ele.send_keys(clinic_arg['DAY'])
+    clinic_input_ele.send_keys(clinic_arg['CLINIC'])
+    driver.find_element(By.ID, url_dict['clinic_query_btn']).click()
+    wait_page_load(driver)
+
+    try:
+        driver.find_element(By.ID, url_dict['clinic_pt_detail_btn']).click()
+        wait_page_load(driver)
+        pt_detail_ele = driver.find_element(By.ID, url_dict['clinic_pt_detail']).text
+        temp_list = pt_detail_ele.splitlines()
+        patientlist = []
+        for items in temp_list:
+            patientlist.append(items.split(' ')[1])
+        return patientlist
+
+    except:
+        raise ValueError('查無診間或病人!')
