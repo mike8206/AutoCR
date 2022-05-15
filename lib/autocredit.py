@@ -1,6 +1,7 @@
 from selenium import webdriver
 
 # customized functions
+from lib.sys_func import readIdPwPin
 from lib.login import login
 from lib.clinic_query import clinic_query
 from lib.clinic_credit import clinic_credit
@@ -14,11 +15,7 @@ def main(url_dict, cr_id_path, chrome_driver_path):
     # read portal credential from txt file
     cridpw = {}
     try:
-        with open(cr_id_path, encoding="UTF-8") as f:
-            idpwpin = f.read().splitlines()
-            # id pw (帳號 密碼)
-            cridpw['id']=idpwpin[0]
-            cridpw['pw']=idpwpin[1]
+        cridpw = readIdPwPin(cr_id_path)
     except:
         raise ValueError('CR帳號密碼檔案錯誤!!')
     # chrome driver

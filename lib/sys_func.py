@@ -43,6 +43,9 @@ def initialUrl(url_path):
         'send_sms_url': "http://ihisaw.ntuh.gov.tw/WebApplication/OtherIndependentProj/CriticalVentilator/MessageSend.aspx?SESSION=",
         'exam_query_url': 'http://hisaw.ntuh.gov.tw/WebApplication/Radiology/ReadOnlyExaPatientListQuery.aspx?SESSION=',
         'query_pt_url': 'http://hisaw.ntuh.gov.tw/WebApplication/OutPatientAdministration/QueryModifyPatBase.aspx?SESSION=',
+        'clinic_offduty_verify_url': 'http://hisaw.ntuh.gov.tw/WebApplication/OPTManagement/VerifyOffDutiesAdm.aspx?SESSION=',
+        'clinic_mod_staffverify_url': 'http://hisaw.ntuh.gov.tw/WebApplication/OPTManagement/VerifyModificationStaff.aspx?SESSION=',
+        'clinic_mod_verify_url': 'http://hisaw.ntuh.gov.tw/WebApplication/OPTManagement/VerifyModificationAdm.aspx?SESSION=',
         'hosp_name': '總院區',
         'dept_name': '家庭醫學部',
         'hosp_list_ele': 'ddlHospital',
@@ -108,6 +111,15 @@ def initialUrl(url_path):
         'query_pt_areacode': 'NTUHWeb1_txtPatBaseContTelAreaCode',
         'query_pt_tel': 'NTUHWeb1_txtPatBaseContTelNo',
         'query_pt_mobile': 'NTUHWeb1_txtPatBaseMobile',
+        'verify_offduty_list': 'NTUHWebVerifyOffDutiesAdm_dtgQueryList',
+        'verify_offduty_btn': 'NTUHWebVerifyOffDutiesAdm_btnApply',
+        'verify_offduty_back': 'NTUHWebVerifyOffDutiesAdm_btnBack',
+        'verify_modify_list': 'NTUHWebVerifyModificationAdm_dtgQueryList',
+        'verify_modify_btn': 'NTUHWebVerifyModificationAdm_btnApply',
+        'verify_modify_back': 'NTUHWebVerifyModificationAdm_btnBack',
+        'verify_staff_list': 'NTUHWebVerifyModificationStaff_dtgQueryList',
+        'verify_staff_btn': 'NTUHWebVerifyModificationStaff_btnApply',
+        'verify_staff_back': 'NTUHWebVerifyModificationStaff_btnBack',    
     }
     data = json.dumps(url_dict)
     saveFile(url_path, data)
@@ -314,3 +326,21 @@ def saveConfig(config_dict, values, config_path):
     config_dict.update(values)
     data = json.dumps(config_dict)
     saveFile(config_path, data)
+
+def readIdPwPin(file):
+    try:
+        with open(file, encoding="UTF-8") as f:
+            idpwlist = f.read().splitlines()
+            idpwpin = {}
+            # id pw (帳號 密碼)
+            idpwpin['id']=idpwlist[0]
+            idpwpin['pw']=idpwlist[1]
+            try:
+                # pin (醫事卡pin碼)
+                idpwpin['pin']=idpwlist[2]
+            except:
+                pass
+            print(idpwpin)
+            return idpwpin
+    except:
+        raise ValueError(str(file)+'檔案錯誤!!')

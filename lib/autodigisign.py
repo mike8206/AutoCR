@@ -1,6 +1,7 @@
 from selenium import webdriver
 
 # customized functions
+from lib.sys_func import readIdPwPin
 from lib.login import login
 from lib.digisign_transfer import digisign_transfer
 from lib.digisign_background import digisign_background
@@ -17,12 +18,7 @@ def main(url_dict, vs_id_path, list_path, chrome_driver_path, ie_driver_path):
     # read portal credential from txt file
     vsidpw = {}
     try:
-        with open(vs_id_path, encoding="UTF-8") as f:
-            idpwpin = f.read().splitlines()
-        # id pw pin (帳號 密碼 PIN碼)
-        vsidpw['id']=idpwpin[0]
-        vsidpw['pw']=idpwpin[1]
-        vsidpw['pin']=idpwpin[2]
+        vsidpw = readIdPwPin(vs_id_path)
     except:
         raise ValueError('VS帳號密碼檔案錯誤!!')
     # read doctor list from txt file (for digital signature)

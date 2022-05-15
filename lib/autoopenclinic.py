@@ -1,6 +1,7 @@
 from selenium import webdriver
 
 # customized functions
+from lib.sys_func import readIdPwPin
 from lib.login import login
 from lib.clinic_open import clinic_open
 
@@ -15,16 +16,7 @@ ie_options.ignore_zoom_level = True
 def main(url_dict, vs_id_path, chrome_driver_path, ie_driver_path):
     # read portal credential from txt file
     vsidpw = {}
-    try:
-        with open(vs_id_path) as f:
-            idpwpin = f.read().splitlines()
-        f.close()
-        # id pw pin (帳號 密碼 PIN碼)
-        vsidpw['id']=idpwpin[0]
-        vsidpw['pw']=idpwpin[1]
-        vsidpw['pin']=idpwpin[2]
-    except:
-        raise ValueError('VS帳號密碼檔案錯誤!!')
+    vsidpw = readIdPwPin(vs_id_path)
     # chrome driver
     driver = webdriver.Chrome(chrome_driver_path, options = chrome_options)
     driver.implicitly_wait(TIMEOUT)
