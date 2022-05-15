@@ -183,11 +183,13 @@ def main():
                 [sg.Button('自動驗證碼', key='-AUTOOCR-', size=(10,1))],
                 [sg.Button('小ＣＲ登入', key='-CRLOGIN-', size=(10,1))],
                 [sg.Button('ＶＳ登入', key='-VSLOGIN-', size=(10,1))],
-                [sg.Button('自動改績效', key='-AUTOCREDIT-', size=(10,1))],
+                [sg.Button('診間改績效', key='-AUTOCREDIT-', size=(10,1))],
             ])],
             [sg.Frame('其他功能', layout=[
+                [sg.Button('晨科會排班', key='-MONTHSCHED-', size=(10,1))],
                 [sg.Button('診間查電話', key='-FINDPHONECLINIC-', size=(10,1))],
                 [sg.Button('檢查查電話', key='-FINDPHONEEXAM-', size=(10,1))],
+                [sg.Button('一鍵搬影片', key='-MOVEVIDEO-', size=(10,1))],
             ])],
         ], vertical_alignment='t')
 
@@ -240,7 +242,7 @@ def main():
                 if exists(config_dict['autoocr_path']):
                     subprocess.Popen([config_dict['autoocr_path']])
             except:
-                sg.Popup('尚未實裝!')
+                sg.Popup('尚未實裝! 請至變更設定開啟額外功能!')
         if event in ('-VSLOGIN-', '-CRLOGIN-'):
             try:
                 if exists(config_dict['login_path']):
@@ -253,13 +255,17 @@ def main():
                             idpwpin = f.read().splitlines()
                     subprocess.Popen(['wscript.exe', config_dict['login_path'], url_dict['portal_url'], idpwpin[0], idpwpin[1] ])
             except:
-                sg.Popup('尚未實裝!')
+                sg.Popup('尚未實裝! 請至變更設定開啟額外功能!')
         if event == '-AUTOCREDIT-':
             scheduler.add_job(autocred, id='手動執行自動改績效')
+        if event == '-MONTHSCHED-':
+            sg.Popup('尚未實裝! 請至變更設定開啟額外功能!')
         if event == '-FINDPHONECLINIC-':
             scheduler.add_job(autophone, args=['clinic'], id='手動執行診間查電話')
         if event == '-FINDPHONEEXAM-':
             scheduler.add_job(autophone, args=['exam'], id='手動執行檢查查電話')
+        if event == '-MOVEVIDEO-':
+            sg.Popup('尚未實裝! 請至變更設定開啟額外功能!')
         if event == '-SAVECONFIG-':
             sys_func.saveConfig(config_dict, values, config_path)
             sg.Popup("已成功儲存設定!")
