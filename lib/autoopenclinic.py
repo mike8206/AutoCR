@@ -25,14 +25,17 @@ def main(url_dict, vs_id_path, chrome_driver_path, ie_driver_path):
         vsidpw['pin']=idpwpin[2]
     except:
         raise ValueError('VS帳號密碼檔案錯誤!!')
-
     # chrome driver
     driver = webdriver.Chrome(chrome_driver_path, options = chrome_options)
     driver.implicitly_wait(TIMEOUT)
     # login using chrome and get the session id
     session_id = login(driver, url_dict, vsidpw)
-    # IE driver
-    driver_ie = webdriver.Ie(ie_driver_path, options = ie_options)
-    driver_ie.implicitly_wait(TIMEOUT)
-    # open IE for open clinic
-    clinic_open(driver_ie, url_dict, session_id)
+    try:
+        # IE driver
+        driver_ie = webdriver.Ie(ie_driver_path, options = ie_options)
+        driver_ie.implicitly_wait(TIMEOUT)
+        # open IE for open clinic
+        clinic_open(driver_ie, url_dict, session_id)
+    except Exception as error:
+        driver_ie.close()
+        raise ValueError('自動開診設定錯誤!! %s' % error)

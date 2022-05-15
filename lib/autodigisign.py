@@ -25,7 +25,6 @@ def main(url_dict, vs_id_path, list_path, chrome_driver_path, ie_driver_path):
         vsidpw['pin']=idpwpin[2]
     except:
         raise ValueError('VS帳號密碼檔案錯誤!!')
-
     # read doctor list from txt file (for digital signature)
     dlist = {}
     try:
@@ -35,16 +34,21 @@ def main(url_dict, vs_id_path, list_path, chrome_driver_path, ie_driver_path):
                 dlist[key] = val.removesuffix('\n')
     except:
         raise ValueError('簽章清單檔案錯誤!!')
-
     # chrome driver
     driver = webdriver.Chrome(chrome_driver_path, options = chrome_options)
     driver.implicitly_wait(TIMEOUT)
     # login using chrome and get the session id
     session_id = login(driver, url_dict, vsidpw)
-    # use chrome for digisign replacing all IDs
-    digisign_transfer(driver, url_dict, session_id, vsidpw, dlist)
-    # IE driver
-    driver_ie = webdriver.Ie(ie_driver_path, options = ie_options)
-    driver_ie.implicitly_wait(TIMEOUT)
-    # open IE for background signing
-    digisign_background(driver_ie, url_dict, session_id, vsidpw)
+    try:
+        # use chrome for digisign replacing all IDs
+        digisign_transfer(driver, url_dict, session_id, vsidpw, dlist)
+    except Exception as error:
+        raise ValueError('轉簽章設定錯誤!! %s' % error)
+    try:
+        # IE driver
+        driver_ie = webdriver.Ie(ie_driver_path, options = ie_options)
+        driver_ie.implicitly_wait(TIMEOUT)
+        # open IE for background signing
+        digisign_background(driver_ie, url_dict, session_id, vsidpw)
+    except Exception as error:
+        raise ValueError('背景簽章設定錯誤!! %s' % error)
