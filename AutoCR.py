@@ -6,7 +6,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
 import json
-from lib import sys_func, autodigisign, autoopenclinic, autosms, autocredit, autogetphone
+from lib import sys_func, autodigisign, autoopenclinic, autosms, autocredit, autodutymodify, autogetphone
 
 # file path
 config_path = 'sys\config.txt'
@@ -37,7 +37,7 @@ except:
 # functions
 def error_log(error_msg):
     with open(error_log_path, 'a', encoding="UTF-8") as file:
-        file.write(error_msg+"\n")
+        file.write(str(error_msg)+"\n")
 def digisign():
     autodigisign.main(url_dict, config_dict['vs_id_path'], config_dict['list_path'], chrome_driver_path, ie_driver_path)
 def openclnc():
@@ -46,6 +46,8 @@ def sms():
     autosms.main(url_dict, config_dict['cr_id_path'], config_dict['phone_path'], config_dict['google_secret_path'], config_dict['google_token_path'], config_dict['google_cal_id'], chrome_driver_path)
 def autocred():
     autocredit.main(url_dict, config_dict['cr_id_path'], chrome_driver_path)
+def dutymodify(function, data):
+    autodutymodify.main(url_dict, function, data, chrome_driver_path)
 def autophone(origin_type):
     autogetphone.main(url_dict, config_dict['cr_id_path'], origin_type, chrome_driver_path)
 
@@ -62,11 +64,11 @@ def main():
         except:
             job_time = "無"
         if event.exception:
-            logstring = str(datetime.now().strftime("%m/%d %H:%M:%S"))+" "+ job_id+' 失敗! 已儲存錯誤紀錄!'
-            error_msg = str(datetime.now().strftime("%m/%d %H:%M:%S"))+" "+ str(event.exception)
+            logstring = datetime.now().strftime("%Y/%m/%d %H:%M:%S")+" "+ job_id+' 失敗! 已儲存錯誤紀錄!'
+            error_msg = datetime.now().strftime("%Y/%m/%d %H:%M:%S")+" "+ str(event.exception)
             error_log(error_msg)
         else:
-            logstring = str(datetime.now().strftime("%m/%d %H:%M:%S"))+" "+ job_id+' 成功執行! 下次執行時間: '+ str(job_time)
+            logstring = datetime.now().strftime("%Y/%m/%d %H:%M:%S")+" "+ job_id+' 成功執行! 下次執行時間: '+ str(job_time)
         update_log(logstring)
 
     def update_log(logstring):
@@ -174,7 +176,7 @@ def main():
             ]),
             sg.Frame('執行結果', layout=[
                 [sg.Multiline(size=(80, 4), disabled=True, autoscroll=True , auto_refresh=True, key='-LOG-')],
-                [sg.Push(), sg.Text('Version: 1.0.5, Credit by: 吳璨宇, 2022/05/15')]
+                [sg.Push(), sg.Text('Version: 1.0.6, Credit by: 吳璨宇, 2022/05/15')]
             ])]
         ])
 
@@ -184,6 +186,7 @@ def main():
                 [sg.Button('小ＣＲ登入', key='-CRLOGIN-', size=(10,1))],
                 [sg.Button('ＶＳ登入', key='-VSLOGIN-', size=(10,1))],
                 [sg.Button('診間改績效', key='-AUTOCREDIT-', size=(10,1))],
+                [sg.Button('請假異動', key='-DUTYMOD-', size=(10,1))],
             ])],
             [sg.Frame('其他功能', layout=[
                 [sg.Button('晨科會排班', key='-MONTHSCHED-', size=(10,1))],
@@ -208,7 +211,7 @@ def main():
     window1, window2 = make_window(config_dict), None
 
     while True:
-        window, event, values = sg.read_all_windows(timeout=100)
+        window, event, values = sg.read_all_windows()
         if event == '-EXIT-' or event == sg.WIN_CLOSED:
             window.close()
             if window == window2:
@@ -248,16 +251,28 @@ def main():
                 if exists(config_dict['login_path']):
                     idpwpin = []
                     if event == '-VSLOGIN-':
-                        with open(config_dict['vs_id_path'], encoding="UTF-8") as f:
-                            idpwpin = f.read().splitlines()
+                        idpwpin = sys_func.readIdPwPin(config_dict['vs_id_path'])
                     if event == '-CRLOGIN-':
-                        with open(config_dict['cr_id_path'], encoding="UTF-8") as f:
-                            idpwpin = f.read().splitlines()
-                    subprocess.Popen(['wscript.exe', config_dict['login_path'], url_dict['portal_url'], idpwpin[0], idpwpin[1] ])
+                        idpwpin = sys_func.readIdPwPin(config_dict['cr_id_path'])
+                    subprocess.Popen(['wscript.exe', config_dict['login_path'], url_dict['portal_url'], idpwpin['id'], idpwpin['pw']])
             except:
                 sg.Popup('尚未實裝! 請至變更設定開啟額外功能!')
         if event == '-AUTOCREDIT-':
             scheduler.add_job(autocred, id='手動執行自動改績效')
+        if event == '-DUTYMOD-':
+            event, values = sg.Window('門診請假異動', [[sg.Combo(['請假確認','異動確認','門診護長確認'], size=(15,1), readonly=True, k='DUTYFUNC'), sg.OK(), sg.Cancel()]], finalize=True).read(close=True)
+            if values['DUTYFUNC'] !='':
+                funcname = values['DUTYFUNC']
+                if values['DUTYFUNC'] == '門診護長確認':
+                    event, values = sg.Window('門診護長帳密', [[[sg.Text('請輸入門診護長帳號密碼')],
+                        [sg.Text('帳號：'), sg.InputText(k='-id-', s=(15,1))],
+                        [sg.Text('密碼：'), sg.InputText(k='-pw-', s=(15,1))],
+                        [sg.Push(), sg.OK(size=(10,1)), sg.Cancel(), sg.Push()]]], finalize=False).read(close=True)
+                    if values['-id-'] !='' and values['-pw-'] !='':
+                        data = {'id': values['-id-'], 'pw': values['-pw-']}
+                else:
+                    data = sys_func.readIdPwPin(config_dict['vs_id_path'])
+                scheduler.add_job(dutymodify, args=[funcname, data], id='手動執行'+funcname)
         if event == '-MONTHSCHED-':
             sg.Popup('尚未實裝! 請至變更設定開啟額外功能!')
         if event == '-FINDPHONECLINIC-':
@@ -304,4 +319,4 @@ if __name__ == '__main__':
     try:
         main()
     except Exception as error:
-        error_log(error)
+        error_log(datetime.now().strftime("%Y/%m/%d %H:%M:%S")+" "+str(error))
