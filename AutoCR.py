@@ -1,12 +1,16 @@
 from datetime import datetime
 from os.path import exists
-import subprocess
+
+import json
 import PySimpleGUI as sg
+
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
-import json
-from lib import sys_func, autodigisign, autoopenclinic, autosms, autocredit, autodutymodify, autogetphone
+
+from threading import Thread
+
+from lib import sys_layout, sys_func, sys_initial, autodigisign, autoopenclinic, autosms, autocredit, autodutymodify, autogetphone
 
 # file path
 config_path = 'sys\config.txt'
@@ -25,14 +29,14 @@ try:
         s = file.read()
         config_dict = json.loads(s)
 except:
-    config_dict = sys_func.initialConfig(config_path)
+    config_dict = sys_initial.initialConfig(config_path)
 
 try:
     with open(config_dict['url_path'], encoding="UTF-8") as file:
         s = file.read()
         url_dict = json.loads(s)
 except:
-    url_dict = sys_func.initialUrl(config_dict['url_path'])
+    url_dict = sys_initial.initialUrl(config_dict['url_path'])
 
 # functions
 def error_log(error_msg):
@@ -119,86 +123,6 @@ def main():
             scheduler.remove_job(job_id='上午自動寄簡訊')
             scheduler.remove_job(job_id='下午自動寄簡訊')
 
-    # GUI layout
-    def make_window(config_dict):
-        sg.theme(config_dict["theme"])    
-
-        # layout part
-        digisign_col = sg.Column([
-            [sg.Frame('自動簽章', layout=[
-                [sg.Push(), sg.Image("sys/digisign.png"), sg.Push()],
-                [sg.Push(), sg.Button('手動執行', key='-RUNDIGISIGN-')],
-                [sg.Frame('定時器',layout=[
-                    [sg.Text('每日執行')],
-                    [sg.InputCombo([0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22], size=(3, 3), default_value=config_dict['digi_hr'], readonly=True, key='digi_hr'), sg.Text('時'),
-                    sg.InputCombo([0, 15, 30, 45], size=(3, 3), default_value=config_dict['digi_min'], readonly=True, key='digi_min'), sg.Text('分')],
-                    [sg.Text('每'),sg.InputCombo([2, 4, 6, 8, 12, 24], size=(3, 3), default_value=config_dict['digi_repeat'], readonly=True, key='digi_repeat'),sg.Text('小時重複')],
-                    [sg.Push(), sg.Button('加入排程', button_color=('white', 'green'), key='-DIGISIGNSWITCH-'), sg.Push()],
-                    ])]
-            ])]
-        ])
-
-        open_clinic_col = sg.Column([
-            [sg.Frame('自動開診', layout=[
-                [sg.Push(), sg.Image("sys/clinic.png"), sg.Push()],
-                [sg.Push(), sg.Button('手動執行', key='-RUNOPENCLNC-')],
-                [sg.Frame('定時器',layout=[
-                    [sg.Text('每周一至每周五')],
-                    [sg.InputCombo([7, 8, 9], size=(3, 3), default_value=config_dict['am_clinic_hr'], readonly=True, key='am_clinic_hr'), sg.Text('時'),
-                    sg.InputCombo([0, 15, 30, 45], size=(3, 3), default_value=config_dict['am_clinic_min'], readonly=True, key='am_clinic_min'), sg.Text('分')],
-                    [sg.InputCombo([11, 12, 13], size=(3, 3), default_value=config_dict['pm_clinic_hr'], readonly=True, key='pm_clinic_hr'), sg.Text('時'),
-                    sg.InputCombo([0, 15, 30, 45], size=(3, 3), default_value=config_dict['pm_clinic_min'], readonly=True, key='pm_clinic_min'), sg.Text('分')],
-                    [sg.Push(), sg.Button('加入排程', button_color=('white', 'green'), key='-CLINICSWITCH-'), sg.Push()],
-                    ])]
-            ])]
-        ])
-
-        sms_col = sg.Column([
-            [sg.Frame('自動寄簡訊', layout=[
-                [sg.Push(),sg.Image("sys/sms.png"),sg.Push()],
-                [sg.Push(),sg.Button('手動執行', key='-RUNSMS-')],
-                [sg.Frame('定時器',layout=[
-                    [sg.Text('每周一至每周五')],
-                    [sg.InputCombo([8, 9], size=(3, 3), default_value=config_dict['am_sms_hr'], readonly=True, key='am_sms_hr'), sg.Text('時'),
-                    sg.InputCombo([0, 15, 30, 45], size=(3, 3), default_value=config_dict['am_sms_min'], readonly=True, key='am_sms_min'), sg.Text('分')],
-                    [sg.InputCombo([16, 17], size=(3, 3), default_value=config_dict['pm_sms_hr'], readonly=True, key='pm_sms_hr'), sg.Text('時'),
-                    sg.InputCombo([0, 15, 30, 45], size=(3, 3), default_value=config_dict['pm_sms_min'], readonly=True, key='pm_sms_min'), sg.Text('分')],
-                    [sg.Push(), sg.Button('加入排程', button_color=('white', 'green'), key='-SMSSWITCH-'),sg.Push()],
-                    ])]
-            ])]
-        ])
-
-        sys_col = sg.Column([
-            [sg.Frame('系統設定', layout=[
-                [sg.Button('變更設定', key='-CHANGESYS-')],
-                [sg.Button('儲存設定', key='-SAVECONFIG-')],
-                [sg.Button('結束程式', key='-EXIT-')],
-            ]),
-            sg.Frame('執行結果', layout=[
-                [sg.Multiline(size=(80, 4), disabled=True, autoscroll=True , auto_refresh=True, key='-LOG-')],
-                [sg.Push(), sg.Text('Version: 1.0.6, Credit by: 吳璨宇, 2022/05/15')]
-            ])]
-        ])
-
-        other_col = sg.Column([
-            [sg.Frame('常用功能', layout=[
-                [sg.Button('自動驗證碼', key='-AUTOOCR-', size=(10,1))],
-                [sg.Button('小ＣＲ登入', key='-CRLOGIN-', size=(10,1))],
-                [sg.Button('ＶＳ登入', key='-VSLOGIN-', size=(10,1))],
-                [sg.Button('診間改績效', key='-AUTOCREDIT-', size=(10,1))],
-                [sg.Button('請假異動', key='-DUTYMOD-', size=(10,1))],
-            ])],
-            [sg.Frame('其他功能', layout=[
-                [sg.Button('晨科會排班', key='-MONTHSCHED-', size=(10,1))],
-                [sg.Button('診間查電話', key='-FINDPHONECLINIC-', size=(10,1))],
-                [sg.Button('檢查查電話', key='-FINDPHONEEXAM-', size=(10,1))],
-                [sg.Button('一鍵搬影片', key='-MOVEVIDEO-', size=(10,1))],
-            ])],
-        ], vertical_alignment='t')
-
-        layout = [[[digisign_col,open_clinic_col,sms_col,other_col],[sys_col]]]
-        return sg.Window('全自動小CR', layout, finalize=True)
-
     # initial setup
     if config_dict['setup'] == False:
         sys_func.checkFileExist(config_dict)
@@ -208,15 +132,18 @@ def main():
     scheduler.add_listener(listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR)
     scheduler.start()
 
-    window1, window2 = make_window(config_dict), None
+    window1, window2 = sys_layout.mainSysLayout(config_dict), None
 
     while True:
-        window, event, values = sg.read_all_windows()
+        window, event, values = sg.read_all_windows(timeout=100)
         if event == '-EXIT-' or event == sg.WIN_CLOSED:
             window.close()
             if window == window2:
                 window2 = None
-                window1 = make_window(config_dict)
+                window1 = sys_layout.mainSysLayout(config_dict)
+                window1.Element('-DIGISIGNSWITCH-').Update(('加入排程','刪除排程')[switch_digisign], button_color=(('white', ('green','red')[switch_digisign])))
+                window1.Element('-CLINICSWITCH-').Update(('加入排程','刪除排程')[switch_clinic], button_color=(('white', ('green','red')[switch_clinic])))
+                window1.Element('-SMSSWITCH-').Update(('加入排程','刪除排程')[switch_sms], button_color=(('white', ('green','red')[switch_sms])))
             elif window == window1:
                 sys_func.saveConfig(config_dict, values, config_path)
                 break
@@ -230,20 +157,20 @@ def main():
             scheduler.add_job(sms, id='手動執行自動寄簡訊')
         if event == '-DIGISIGNSWITCH-':
             switch_digisign = not switch_digisign
-            window.Element('-DIGISIGNSWITCH-').Update(('加入排程','刪除排程')[switch_digisign], button_color=(('white', ('green','red')[switch_digisign])))
+            window1.Element('-DIGISIGNSWITCH-').Update(('加入排程','刪除排程')[switch_digisign], button_color=(('white', ('green','red')[switch_digisign])))
             digisign_switch_schdlr(switch_digisign, values['digi_hr'], values['digi_min'], values['digi_repeat'])
         if event == '-CLINICSWITCH-':
             switch_clinic = not switch_clinic
-            window.Element('-CLINICSWITCH-').Update(('加入排程','刪除排程')[switch_clinic], button_color=(('white', ('green','red')[switch_clinic])))
+            window1.Element('-CLINICSWITCH-').Update(('加入排程','刪除排程')[switch_clinic], button_color=(('white', ('green','red')[switch_clinic])))
             openclnc_switch_schdlr(switch_clinic, values['am_clinic_hr'], values['am_clinic_min'], values['pm_clinic_hr'], values['pm_clinic_min'])
         if event == '-SMSSWITCH-':
             switch_sms = not switch_sms
-            window.Element('-SMSSWITCH-').Update(('加入排程','刪除排程')[switch_sms], button_color=(('white', ('green','red')[switch_sms])))
+            window1.Element('-SMSSWITCH-').Update(('加入排程','刪除排程')[switch_sms], button_color=(('white', ('green','red')[switch_sms])))
             sms_switch_schdlr(switch_sms, values['am_sms_hr'], values['am_sms_min'], values['pm_sms_hr'], values['pm_sms_min'])
         if event == '-AUTOOCR-':
             try:
                 if exists(config_dict['autoocr_path']):
-                    subprocess.Popen([config_dict['autoocr_path']])
+                    Thread(target=sys_func.autoOCR, args=[config_dict['autoocr_path']], daemon=True).start()
             except:
                 sg.Popup('尚未實裝! 請至變更設定開啟額外功能!')
         if event in ('-VSLOGIN-', '-CRLOGIN-'):
@@ -254,38 +181,28 @@ def main():
                         idpwpin = sys_func.readIdPwPin(config_dict['vs_id_path'])
                     if event == '-CRLOGIN-':
                         idpwpin = sys_func.readIdPwPin(config_dict['cr_id_path'])
-                    subprocess.Popen(['wscript.exe', config_dict['login_path'], url_dict['portal_url'], idpwpin['id'], idpwpin['pw']])
+                    Thread(target=sys_func.autoLogin, args=[config_dict['login_path'], url_dict['portal_url'], idpwpin], daemon=True).start()
             except:
                 sg.Popup('尚未實裝! 請至變更設定開啟額外功能!')
         if event == '-AUTOCREDIT-':
-            scheduler.add_job(autocred, id='手動執行自動改績效')
+            Thread(target=scheduler.add_job, args=[autocred, None, None, None, '手動執行自動改績效'], daemon=True).start()
         if event == '-DUTYMOD-':
-            event, values = sg.Window('門診請假異動', [[sg.Combo(['請假確認','異動確認','門診護長確認'], size=(15,1), readonly=True, k='DUTYFUNC'), sg.OK(), sg.Cancel()]], finalize=True).read(close=True)
-            if values['DUTYFUNC'] !='':
-                funcname = values['DUTYFUNC']
-                if values['DUTYFUNC'] == '門診護長確認':
-                    event, values = sg.Window('門診護長帳密', [[[sg.Text('請輸入門診護長帳號密碼')],
-                        [sg.Text('帳號：'), sg.InputText(k='-id-', s=(15,1))],
-                        [sg.Text('密碼：'), sg.InputText(k='-pw-', s=(15,1))],
-                        [sg.Push(), sg.OK(size=(10,1)), sg.Cancel(), sg.Push()]]], finalize=False).read(close=True)
-                    if values['-id-'] !='' and values['-pw-'] !='':
-                        data = {'id': values['-id-'], 'pw': values['-pw-']}
-                else:
-                    data = sys_func.readIdPwPin(config_dict['vs_id_path'])
-                scheduler.add_job(dutymodify, args=[funcname, data], id='手動執行'+funcname)
+            duty_arg = sys_func.dutyModify(config_dict)
+            if duty_arg:
+                Thread(target=scheduler.add_job, args=[dutymodify, None, duty_arg, None, '手動執行'+duty_arg[0]], daemon=True).start()
         if event == '-MONTHSCHED-':
             sg.Popup('尚未實裝! 請至變更設定開啟額外功能!')
         if event == '-FINDPHONECLINIC-':
-            scheduler.add_job(autophone, args=['clinic'], id='手動執行診間查電話')
+            Thread(target=scheduler.add_job(autophone, args=['clinic'], id='手動執行診間查電話'), daemon=True).start()
         if event == '-FINDPHONEEXAM-':
-            scheduler.add_job(autophone, args=['exam'], id='手動執行檢查查電話')
+            Thread(target=scheduler.add_job(autophone, args=['exam'], id='手動執行檢查查電話'), daemon=True).start()
         if event == '-MOVEVIDEO-':
             sg.Popup('尚未實裝! 請至變更設定開啟額外功能!')
         if event == '-SAVECONFIG-':
             sys_func.saveConfig(config_dict, values, config_path)
             sg.Popup("已成功儲存設定!")
         if event == '-CHANGESYS-' and not window2:
-            window2 = sys_func.changeSysFunction()
+            window2 = sys_layout.changeSysFunction()
             window.close()
         if event == '-CHANGEVS-':
             sys_func.saveIdPw('VS', config_dict['vs_id_path'])
@@ -304,7 +221,7 @@ def main():
             if values['-THEME LIST-'] !='' and values['-THEME LIST-'] != sg.theme():
                 config_dict['theme'] = sg.theme(values['-THEME LIST-'])
                 sg.theme(values['-THEME LIST-'])
-                window2 = sys_func.changeSysFunction()
+                window2 = sys_layout.changeSysFunction()
                 window.close()
         if event == '-OPENFUNCTION-':
             sys_func.openOtherFunction(config_dict)
