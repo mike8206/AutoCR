@@ -1,129 +1,37 @@
 import json
+import subprocess
 import PySimpleGUI as sg
-from os.path import exists, relpath
+from os.path import relpath, exists
+
+# customized functions
+from lib.sys_initial import initialUrl
+
+def readIdPwPin(file):
+    try:
+        with open(file, encoding="UTF-8") as f:
+            idpwlist = f.read().splitlines()
+            idpwpin = {}
+            # id pw (帳號 密碼)
+            idpwpin['id']=idpwlist[0]
+            idpwpin['pw']=idpwlist[1]
+            try:
+                # pin (醫事卡pin碼)
+                idpwpin['pin']=idpwlist[2]
+            except:
+                pass
+            return idpwpin
+    except:
+        raise ValueError(str(file)+'檔案錯誤!!')
 
 def saveFile(filename, data):
     with open(filename, 'w', encoding="UTF-8") as file:
         file.write(str(data))
 
-def initialConfig(config_path):
-    config_dict = {
-        "setup": False,
-        "vs_id_path": "loginID.txt",
-        "cr_id_path": "CRID.txt",
-        "list_path": "List.txt",
-        "phone_path": "Phonelist.txt",
-        "google_secret_path": "secret.json",
-        "google_token_path": "token.json",
-        "google_cal_id": ['primary'],
-        "url_path": "sys\web_config.txt",
-        "theme": "DefaultNoMoreNagging", 
-        "digi_hr": 6,
-        "digi_min": 0,
-        "digi_repeat": 8,
-        "am_clinic_hr": 8,
-        "am_clinic_min": 0,
-        "pm_clinic_hr": 12,
-        "pm_clinic_min": 30,
-        "am_sms_hr": 9,
-        "am_sms_min": 0,
-        "pm_sms_hr": 16,
-        "pm_sms_min": 0
-    }
-    data = json.dumps(config_dict)
+def saveConfig(config_dict, values, config_path):
+    values.pop('-LOG-', None)
+    config_dict.update(values)
+    data = json.dumps(config_dict, ensure_ascii=False)
     saveFile(config_path, data)
-    return config_dict
-
-def initialUrl(url_path):
-    url_dict = {
-        'portal_url': 'http://portal.ntuh.gov.tw/General/Login.aspx',
-        'digisign_replace_url': 'http://ihisaw.ntuh.gov.tw/WebApplication/DigitalSignature/DSExecuteEmpReplace.aspx?SESSION=',
-        'digisign_background_url': 'http://ihisaw.ntuh.gov.tw/WebApplication/DigitalSignature/BackGroundDS.aspx?SESSION=',
-        'open_clinic_url': "http://hisaw.ntuh.gov.tw/WebApplication/Clinics/OpenClinicsByClinicNo.aspx?SESSION=",
-        'send_sms_url': "http://ihisaw.ntuh.gov.tw/WebApplication/OtherIndependentProj/CriticalVentilator/MessageSend.aspx?SESSION=",
-        'exam_query_url': 'http://hisaw.ntuh.gov.tw/WebApplication/Radiology/ReadOnlyExaPatientListQuery.aspx?SESSION=',
-        'query_pt_url': 'http://hisaw.ntuh.gov.tw/WebApplication/OutPatientAdministration/QueryModifyPatBase.aspx?SESSION=',
-        'clinic_offduty_verify_url': 'http://hisaw.ntuh.gov.tw/WebApplication/OPTManagement/VerifyOffDutiesAdm.aspx?SESSION=',
-        'clinic_mod_staffverify_url': 'http://hisaw.ntuh.gov.tw/WebApplication/OPTManagement/VerifyModificationStaff.aspx?SESSION=',
-        'clinic_mod_verify_url': 'http://hisaw.ntuh.gov.tw/WebApplication/OPTManagement/VerifyModificationAdm.aspx?SESSION=',
-        'hosp_name': '總院區',
-        'dept_name': '家庭醫學部',
-        'hosp_list_ele': 'ddlHospital',
-        'quick_menu_ele': 'rdblQuickMenu_0',
-        'username_input_ele': 'txtUserID',
-        'password_input_ele': 'txtPass',
-        'captcha_img_ele': 'imgVerifyCode',
-        'captcha_input_ele': 'txtVerifyCode',
-        'submit_ele': 'imgBtnSubmitNew',
-        'digi_doc_id': 'NTUHWeb1_txbEmpNO',
-        'digi_update_panel': 'NTUHWeb1_UpdatePanel1',
-        'digi_refresh_btn': 'NTUHWeb1_btnRefresh',
-        'digi_count_text': 'NTUHWeb1_lblUnDsCnts',
-        'digi_new_id': 'NTUHWeb1_txbEmpNoNew',
-        'digi_tran_btn': 'NTUHWeb1_btnUpdate',
-        'digi_EMR_cbx': 'NTUHWeb1_dgrEmrRecord_ctl01_cbxSelectAll',
-        'digi_DRUG_cbx': 'NTUHWeb1_dgrDrugGivenRecord_ctl01_cbxSelectAll',
-        'digiback_pin': 'NTUHWeb1_txbPinCode',
-        'digiback_btn': 'NTUHWeb1_btnBackGroundDSByPCSC',
-        'digiback_ddl_reason': "reasonDDL-id > option:nth-child(1)",
-        'digiback_ddl_confirm': "body > div > div.ui-dialog-buttonpane.ui-widget-content.ui-helper-clearfix > div > button:nth-child(1)",
-        'clinic_hosp_list': 'NTUHWeb1_HospDropList',
-        'clinic_dept_list': 'NTUHWeb1_DeptDropList',
-        'clinic_year': 'NTUHWeb1_DateTextBoxYearMonthDayInputUI1_YearInput',
-        'clinic_month': 'NTUHWeb1_DateTextBoxYearMonthDayInputUI1_MonthInput',
-        'clinic_day': 'NTUHWeb1_DateTextBoxYearMonthDayInputUI1_DayInput',
-        'clinic_ampm_list': 'NTUHWeb1_AMPMDropList',
-        'clinic_num_input': 'NTUHWeb1_ClinicNoInput',
-        'clinic_query_btn': 'NTUHWeb1_QueryScheduleList',
-        'clinic_list_prefix': 'NTUHWeb1_ClinicsListGrid_ctl',
-        'clinic_btn_suffix': '_LinkButtonSelect',
-        'clinic_num_suffix': '_ClinicNo',
-        'clinic_start_btn': 'NTUHWeb1_StartClinics',
-        'clinic_nurse_btn': 'NTUHWeb1_btnNurseSave',
-        'clinic_back_btn': 'NTUHWeb1_BackToTopPanel',
-        'clinic_pt_detail_btn': 'NTUHWeb1_ShowDetailPatInfo',
-        'clinic_pt_detail': 'NTUHWeb1_PatientDefailInfoLabel',
-        'clinic_all_pt_btn': 'NTUHWeb1_CheckBoxAllPatient',
-        'clinic_pt_prefix': 'NTUHWeb1_PatSimpleList_ctl',
-        'clinic_pt_suffix': '_VisitSeqnoPlusName',
-        'clinic_ptpage_other_func':'NTUHWeb1_ClinicsOtherFunction',
-        'clinic_ptpage_change_cred':'NTUHWeb1_RepeaterPageLinkList_ctl13_LinkPageName',
-        'clinic_cred_input':'NTUHWeb1_RewardEmpNoTextBoxInput',
-        'clinic_cred_change_btn':'NTUHWeb1_ModifyRewardEmpNoButton',
-        'clinic_cred_return_pt':'NTUHWeb1_ButtonReturnConfirmDiagnosisOrder',
-        'clinic_ptpage_return':'NTUHWeb1_Return',
-        'sms_phone_ele': 'NTUHWeb1_PHSTelNo',
-        'sms_type_btn': 'NTUHWeb1_rdbNormal',
-        'sms_msg_input': 'NTUHWeb1_MessageContent',
-        'sms_send_btn': 'NTUHWeb1_btnSendSMSAndEmail',
-        'exam_ampm_list': 'NTUHWeb1_ddlShiftType',
-        'exam_unit_list': 'NTUHWeb1_ddlExaUnitList',
-        'exam_origin_list': 'NTUHWeb1_ddlPatClass',
-        'exam_item_list': 'NTUHWeb1_ddlExaItemList',
-        'exam_query_date': 'NTUHWeb1_txbQueryStartDate',
-        'exam_query_btn': 'NTUHWeb1_btnQueryBySchedule',
-        'exam_query_table': 'NTUHWeb1_grvPatientOrderList',
-        'query_chart_ele': 'NTUHWeb1_txtChartNo',
-        'query_btn': 'NTUHWeb1_btnQuery',
-        'query_home_btn': 'NTUHWeb1_btnHome2',
-        'query_pt_cht_sur': 'NTUHWeb1_txtPatBaseFChtName',
-        'query_pt_cht_given': 'NTUHWeb1_txtPatBaseGChtName',
-        'query_pt_areacode': 'NTUHWeb1_txtPatBaseContTelAreaCode',
-        'query_pt_tel': 'NTUHWeb1_txtPatBaseContTelNo',
-        'query_pt_mobile': 'NTUHWeb1_txtPatBaseMobile',
-        'verify_offduty_list': 'NTUHWebVerifyOffDutiesAdm_dtgQueryList',
-        'verify_offduty_btn': 'NTUHWebVerifyOffDutiesAdm_btnApply',
-        'verify_offduty_back': 'NTUHWebVerifyOffDutiesAdm_btnBack',
-        'verify_modify_list': 'NTUHWebVerifyModificationAdm_dtgQueryList',
-        'verify_modify_btn': 'NTUHWebVerifyModificationAdm_btnApply',
-        'verify_modify_back': 'NTUHWebVerifyModificationAdm_btnBack',
-        'verify_staff_list': 'NTUHWebVerifyModificationStaff_dtgQueryList',
-        'verify_staff_btn': 'NTUHWebVerifyModificationStaff_btnApply',
-        'verify_staff_back': 'NTUHWebVerifyModificationStaff_btnBack',    
-    }
-    data = json.dumps(url_dict)
-    saveFile(url_path, data)
-    return url_dict
 
 def saveIdPw(person, filename):
     while True:
@@ -218,6 +126,7 @@ def saveGoogleCalnId(googlecalid):
             if googlecalid:
                 googlecalid = list(dict.fromkeys(googlecalid))
                 sg.Popup('設定已完成!\n已輸入以下ID：\n'+str(googlecalid))
+                window.close()
                 return googlecalid
             else:
                 sg.Popup('輸入資訊不完整!')
@@ -229,6 +138,8 @@ def saveGoogleCalnId(googlecalid):
             else:
                 sg.Popup('輸入資訊不完整!')
         if event == 'Cancel' or event == sg.WIN_CLOSED:
+            sg.Popup('取消Google日曆ID設定!')
+            window.close()
             return googlecalid
 
 def changeUrlElement(url_path):
@@ -237,19 +148,21 @@ def changeUrlElement(url_path):
         try:
             with open(url_path, encoding="UTF-8") as file:
                 s = file.read()
-                url_dict = json.loads(s) 
+                url_dict = json.loads(s)
+                if url_dict != {}:
+                    break
+                else:
+                    initialUrl(url_path)
         except:
             initialUrl(url_path)
-        break
     while True:
         layout = [[
-            [sg.Text('下列為網頁設定')],
+            [sg.Push(),sg.Button('設定完成',size=(10,1),key='-OK-'), sg.Push()],
             [sg.Column([
                 *[[sg.Text(key, size=(20,1)), sg.InputText(default_text=value, size=(100,1), key=key)] for key, value in url_dict.items()]
             ], scrollable=True)],
-            [sg.Push(),sg.Button('設定完成',size=(10,1),key='-OK-'), sg.Push()]
         ]]
-        event, values = sg.Window('設定網頁元素', layout).read(close=True)
+        event, values = sg.Window('設定網頁元素', layout, size=(900,700)).read(close=True)
         if event == '-OK-':
             url_dict.update(values)
             saveFile(url_path, url_dict)
@@ -311,36 +224,51 @@ def checkFileExist(config_dict):
         initialUrl(config_dict['url_path'])
     sg.Popup('檢查檔案已完成!!')
 
-def changeSysFunction():
-    layout = [[[sg.Push(), sg.Text('請選擇下列功能'),sg.Push()],
-                [sg.Button('變更ＣＲ帳密', key='-CHANGECR-'),sg.Button('變更簽章清單', key='-CHANGESIGN-')],
-                [sg.Button('變更ＶＳ帳密', key='-CHANGEVS-'),sg.Button('變更簡訊清單', key='-CHANGESMS-')],
-                [sg.Button('變更日曆ＩＤ', key='-CHANGECALID-'),sg.Button('變更授權檔案', key='-CHANGECERT-'),],
-                [sg.Button('變更風格樣式', key='-CHANGETHEME-'),sg.Button('開啟額外功能', key='-OPENFUNCTION-')],
-                [sg.Button('檢查系統檔案', key='-CHECKFILE-'),sg.Button('變更網址指標', key='-CHANGEURL-'),],
-                [sg.Push(),sg.Button('設定完成',size=(10,1),key='-EXIT-'), sg.Push()]]]
-    return sg.Window('更新系統設定', layout, finalize=True)
+def autoOCR(autoocr_path):
+    subprocess.Popen(autoocr_path)
 
-def saveConfig(config_dict, values, config_path):
-    values.pop('-LOG-', None)
-    config_dict.update(values)
-    data = json.dumps(config_dict)
-    saveFile(config_path, data)
-
-def readIdPwPin(file):
+def autoLogin(login_path, portal_url, idpwpin):
     try:
-        with open(file, encoding="UTF-8") as f:
-            idpwlist = f.read().splitlines()
-            idpwpin = {}
-            # id pw (帳號 密碼)
-            idpwpin['id']=idpwlist[0]
-            idpwpin['pw']=idpwlist[1]
-            try:
-                # pin (醫事卡pin碼)
-                idpwpin['pin']=idpwlist[2]
-            except:
-                pass
-            print(idpwpin)
-            return idpwpin
-    except:
-        raise ValueError(str(file)+'檔案錯誤!!')
+        subprocess.Popen(['wscript.exe', login_path, portal_url, idpwpin['id'], idpwpin['pw']])
+    except Exception as error:
+        raise ValueError('自動登入出現錯誤!! %s' % error)
+
+def dutyModify(config_dict):
+    idpw = ''
+    while True:
+        layout = [[
+            [sg.Combo(['請假確認','異動確認','門診護長確認'], size=(15,1), readonly=True, k='DUTYFUNC'), sg.OK(), sg.Cancel()]
+        ]]
+        event, values = sg.Window('門診請假異動', layout).read(close=True)
+        if event == 'OK':
+            if values['DUTYFUNC'] !='':
+                funcname = values['DUTYFUNC']
+                if values['DUTYFUNC'] == '門診護長確認':
+                    while True:
+                        event, values = sg.Window('門診護長帳密', [[[sg.Text('請輸入門診護長帳號密碼')],
+                            [sg.Text('帳號：'), sg.InputText(k='-id-', s=(15,1))],
+                            [sg.Text('密碼：'), sg.InputText(k='-pw-', s=(15,1))],
+                            [sg.Push(), sg.OK(size=(10,1)), sg.Cancel(), sg.Push()]]]).read(close=True)
+                        if event == 'OK':
+                            if values['-id-'] !='' and values['-pw-'] !='':
+                                idpw = {'id': values['-id-'], 'pw': values['-pw-']}
+                                data = [funcname, idpw]
+                                return data
+                            else:
+                                sg.Popup('未輸入完整帳號密碼!')
+                        else:
+                            sg.Popup('功能已停止!')
+                            break
+                else:
+                    idpw = readIdPwPin(config_dict['vs_id_path'])
+                    if idpw != '':
+                        data = [funcname, idpw]
+                        return data
+                    else:
+                        sg.Popup('VS帳號密碼未輸入!')
+                        raise ValueError('VS帳號密碼未輸入!')
+            else:
+                sg.Popup('未選擇功能!')
+        else:
+            sg.Popup('功能已停止!')
+            break

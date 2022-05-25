@@ -1,15 +1,9 @@
-from selenium import webdriver
-
 # customized functions
 from lib.sys_func import readIdPwPin
-from lib.google_calendar import google_calendar
+from lib.web_driver_setting import web_driver_setting
 from lib.login import login
-from lib.sms_send import sms_send
-
-# options
-TIMEOUT = 5
-chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument('--start-maximized')
+from lib.sms.google_calendar import google_calendar
+from lib.sms.sms_send import sms_send
 
 def main(url_dict, cr_id_path, phone_path, google_secret_path, google_token_path, google_cal_id, chrome_driver_path):
     # read portal credential from txt file
@@ -19,13 +13,12 @@ def main(url_dict, cr_id_path, phone_path, google_secret_path, google_token_path
         with open(phone_path, encoding="UTF-8") as f:
             phone_list = f.read()
     except:
-        raise ValueError('簡訊檔案錯誤!!')
+        raise ValueError('簡訊清單檔案錯誤!!')
     if len(google_cal_id) != 0:
         # get event from google calendar
         SMSstring = google_calendar(google_secret_path, google_token_path, google_cal_id)
         # chrome driver
-        driver = webdriver.Chrome(chrome_driver_path, options = chrome_options)
-        driver.implicitly_wait(TIMEOUT)
+        driver = web_driver_setting('chrome', chrome_driver_path, 'max')
     else:
         raise ValueError('未設定Google日曆ID!!')
     # login using chrome and get the session id
@@ -33,6 +26,7 @@ def main(url_dict, cr_id_path, phone_path, google_secret_path, google_token_path
     try:
         # send sms
         sms_send(driver, url_dict, session_id, phone_list, SMSstring)
+        driver.close()
     except Exception as error:
         driver.close()
         raise ValueError('寄送簡訊失敗!! %s' % error)
