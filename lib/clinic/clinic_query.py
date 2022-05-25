@@ -35,8 +35,8 @@ def chooseClinic(driver, url_dict, session_id, clinic_arg):
             break
 
 def clinic_query(driver, url_dict, session_id):
-    taiwan_taipei = timezone('Asia/Taipei')
-    today = datetime.now(taiwan_taipei)
+    timeZone = timezone('Asia/Taipei')
+    today = datetime.now(timeZone)
     clinic_arg = {}
     clinic_ele_values = getClinicDropListEle(driver, url_dict, session_id)
     while True:
