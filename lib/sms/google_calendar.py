@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, tzinfo
+from datetime import datetime, timedelta
 from os.path import exists
 from pytz import timezone, utc
 
