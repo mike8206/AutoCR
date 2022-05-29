@@ -1,4 +1,6 @@
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from datetime import datetime
 from pytz import timezone
@@ -7,6 +9,7 @@ from pytz import timezone
 from lib.wait_page_load import wait_page_load
 
 def clinic_open(driver_ie, url_dict, session_id):
+    tempWait = WebDriverWait(driver_ie, 60)
     # IE goto open clinic page
     driver_ie.get(url_dict['open_clinic_url'] + session_id)
     driver_ie.minimize_window()
@@ -47,11 +50,14 @@ def clinic_open(driver_ie, url_dict, session_id):
             if clinic_tag_ele:
                 clinic_tag_ele.click()
                 wait_page_load(driver_ie)
-                driver_ie.find_element(By.ID, url_dict['clinic_start_btn']).click()
+                start_btn = tempWait.until(EC.element_to_be_clickable((By.ID, url_dict['clinic_start_btn'])))
+                start_btn.click()
                 wait_page_load(driver_ie)
-                driver_ie.find_element(By.ID, url_dict['clinic_nurse_btn']).click()
+                nurse_btn = tempWait.until(EC.element_to_be_clickable((By.ID, url_dict['clinic_nurse_btn'])))
+                nurse_btn.click()
                 wait_page_load(driver_ie)
-                driver_ie.find_element(By.ID, url_dict['clinic_back_btn']).click()
+                back_btn = tempWait.until(EC.element_to_be_clickable((By.ID, url_dict['clinic_back_btn'])))
+                back_btn.click()
                 number+=1
         except:
             break

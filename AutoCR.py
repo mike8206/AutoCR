@@ -11,6 +11,7 @@ from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
 from threading import Thread
 
 from lib import sys_layout, sys_func, sys_initial, autodigisign, autoopenclinic, autosms, autocredit, autodutymodify, autogetphone
+from lib.sms.google_calendar import googleRefreshToken
 
 # file path
 config_path = 'sys\config.txt'
@@ -46,6 +47,8 @@ def digisign():
     autodigisign.main(url_dict, config_dict['vs_id_path'], config_dict['list_path'], chrome_driver_path, ie_driver_path)
 def openclnc():
     autoopenclinic.main(url_dict, config_dict['vs_id_path'], chrome_driver_path, ie_driver_path)
+def googletoken():
+    googleRefreshToken(config_dict['google_secret_path'], config_dict['google_token_path'])
 def sms():
     autosms.main(url_dict, config_dict['cr_id_path'], config_dict['phone_path'], config_dict['google_secret_path'], config_dict['google_token_path'], config_dict['google_cal_id'], chrome_driver_path)
 def autocred():
@@ -150,11 +153,17 @@ def main():
         if scheduler.running != True:
             scheduler.start()
         if event == '-RUNDIGISIGN-':
-            scheduler.add_job(digisign, id='手動執行自動簽章')
+            Thread(target=scheduler.add_job, args=[digisign, None, None, None, '手動執行自動簽章'], daemon=True).start()
         if event == '-RUNOPENCLNC-':
-            scheduler.add_job(openclnc, id='手動執行自動開診')
+            Thread(target=scheduler.add_job, args=[openclnc, None, None, None, '手動執行自動開診'], daemon=True).start()
+        if event == '-REFRESHTOKEN-':
+            refreshtoken =  Thread(target=googletoken, daemon=True).start()
+            if refreshtoken:
+                print('finish!')
+            else:
+                print('failed')
         if event == '-RUNSMS-':
-            scheduler.add_job(sms, id='手動執行自動寄簡訊')
+            Thread(target=scheduler.add_job, args=[sms, None, None, None, '手動執行自動寄簡訊'], daemon=True).start()
         if event == '-DIGISIGNSWITCH-':
             switch_digisign = not switch_digisign
             window1.Element('-DIGISIGNSWITCH-').Update(('加入排程','刪除排程')[switch_digisign], button_color=(('white', ('green','red')[switch_digisign])))

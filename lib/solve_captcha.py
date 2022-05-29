@@ -12,6 +12,6 @@ def downloadFile(url):
 
 def solve_captcha(captcha_img_ele):
     img_bytes = downloadFile(captcha_img_ele.get_attribute('src'))
-    ocr = ddddocr.DdddOcr()
+    ocr = ddddocr.DdddOcr(show_ad=False)
     captcha = ocr.classification(img_bytes)
     return captcha

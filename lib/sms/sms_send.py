@@ -40,5 +40,5 @@ def sms_send(driver, url_dict, session_id, phone_list, SMSstring):
             alert.accept()
         except:
             continue
-        sleep(3)
+        sleep(5)
         wait_page_load(driver)

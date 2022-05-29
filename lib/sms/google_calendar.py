@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from os.path import exists
 from pytz import timezone, utc
 
-# from google.auth.transport.requests import Request
+from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
@@ -89,6 +89,18 @@ def eventToSmsString(events, starttime, timeZone, am):
             SMSstring = "各位同仁辛苦了，請記得電子簽章，"+dateWeekToString(starttime, timeZone)+eventstring
     return SMSstring
 
+def googleRefreshToken(google_secret_path, google_token_path):
+    flow = InstalledAppFlow.from_client_secrets_file(
+                google_secret_path, SCOPES)
+    creds = flow.run_local_server(port=0)
+    if creds:
+        with open(google_token_path, 'w') as token:
+            token.write(creds.to_json())
+        return True
+    else:
+        return False
+    
+
 def google_calendar(google_secret_path, google_token_path, google_cal_id):
     # AMPM
     timeZone = timezone('Asia/Taipei')
@@ -103,12 +115,12 @@ def google_calendar(google_secret_path, google_token_path, google_cal_id):
     if exists(google_token_path):
         creds = Credentials.from_authorized_user_file(google_token_path, SCOPES)
     if not creds or not creds.valid:
-        # if creds and creds.expired and creds.refresh_token:
-            # creds.refresh(Request())
-        # else:
-        flow = InstalledAppFlow.from_client_secrets_file(
-                google_secret_path, SCOPES)
-        creds = flow.run_local_server(port=0)
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                    google_secret_path, SCOPES)
+            creds = flow.run_local_server(port=0)
         with open(google_token_path, 'w') as token:
             token.write(creds.to_json())
     

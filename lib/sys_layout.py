@@ -36,7 +36,7 @@ def mainSysLayout(config_dict):
     sms_col = sg.Column([
         [sg.Frame('自動寄簡訊', layout=[
             [sg.Push(),sg.Image("sys/sms.png"),sg.Push()],
-            [sg.Push(),sg.Button('手動執行', key='-RUNSMS-')],
+            [sg.Push(),sg.Button('更新Token', key='-REFRESHTOKEN-'),sg.Button('手動執行', key='-RUNSMS-')],
             [sg.Frame('定時器',layout=[
                 [sg.Text('每周一至每周五')],
                 [sg.InputCombo([8, 9], size=(3, 3), default_value=config_dict['am_sms_hr'], readonly=True, key='am_sms_hr'), sg.Text('時'),
