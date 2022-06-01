@@ -10,14 +10,20 @@
 1. 自動簽章
 2. 自動開診
 3. 自動寄簡訊
-4. 一鍵改績效(測試中)
-5. 一鍵查電話(測試中)
+4. 一鍵改績效(已改至其他專案)
+5. 一鍵查電話(已改至其他專案)
 6. 一鍵請假異動確認
 7. 初次設定檔案檢查
 8. 模組化設定
 9. 可自定義網址元素
 ------
 ## 更新部分
+v1.1.0
+* 移除改績效、查電話功能
+* 更新檔案目錄
+* 修正開診錯誤(仍會中斷)
+* 修正讀取檔案編碼錯誤
+
 v1.0.7
 * 新增查電話(尚未測試)
 * 更新檔案目錄
@@ -44,7 +50,7 @@ v1.0.6
 ## 打包方式
 1. 安裝以下程式
 ```
-pip install --upgrade pyinstaller selenium pySimpleGUI apscheduler pytz requests ddddocr pandas google-api-python-client google-auth-httplib2 google-auth-oauthlib
+pip install --upgrade pyinstaller selenium pySimpleGUI apscheduler pytz requests ddddocr chardet google-api-python-client google-auth-httplib2 google-auth-oauthlib
 ```
 2. 依照自己電腦安裝package的位置，更新spec檔案內pathx變數：
 > pathex=['C:\\python.3.9\\localcache\\local-packages'],
