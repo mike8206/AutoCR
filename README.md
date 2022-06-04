@@ -10,14 +10,19 @@
 1. 自動簽章
 2. 自動開診
 3. 自動寄簡訊
-4. 一鍵改績效(已改至其他專案)
-5. 一鍵查電話(已改至其他專案)
-6. 一鍵請假異動確認
-7. 初次設定檔案檢查
-8. 模組化設定
-9. 可自定義網址元素
+4. 一鍵請假異動確認
+5. 初次設定檔案檢查
+6. 模組化設定
+7. 可自定義網址元素
+8. 一鍵改績效(已改至其他專案)
+9. 一鍵查電話(已改至其他專案)
 ------
 ## 更新部分
+v1.1.1
+* 更新檔案目錄
+* 修正IE native event造成開診中斷
+* 修正Google日曆因全日活動造成簡訊失敗
+
 v1.1.0
 * 移除改績效、查電話功能
 * 更新檔案目錄
@@ -40,11 +45,12 @@ v1.0.6
 ------
 ## 預計更新
 * 晨科會排班 (以另一專案寫code中)
+* 一鍵查電話 (以另一專案寫code中)
 * 一鍵搬影片 (尚未開始)
 ------
 ## 使用前注意事項
 1. 將符合電腦版本的chromedriver, IEDriverServer32放在sys目錄下
-2. 若不想加入Google行事曆預設primary，可至sys\\sys_config.txt設定
+2. 若不想加入Google行事曆預設primary，可至sys\\sys_config.json設定
 3. CR或VS登入文字檔架構為三行
 ------
 ## 打包方式
@@ -59,6 +65,23 @@ pip install --upgrade pyinstaller selenium pySimpleGUI apscheduler pytz requests
 4. 在AutoCR.py及AutoCR.spec資料夾內打開終端，使用指令pyinstaller打包成exe檔
 ```
 pyinstaller AutoCR.spec
+```
+------
+## 數位簽章
+(參考: https://ithelp.ithome.com.tw/articles/10281279
+及 https://shuwn.dev/2021/12/02/python_exe_%E5%9F%B7%E8%A1%8C%E6%AA%94%E4%B8%A6%E9%80%B2%E8%A1%8C%E7%A8%8B%E5%BC%8F%E7%B0%BD%E7%AB%A0/)
+1. 準備自然人憑證
+2. 在網路上下載signtool.exe
+3. 輸入指令使用signtool新增電子憑證進exe檔
+```
+C:\signtool.exe sign /a /t http://timestamp.sectigo.com /v C:\Users\Desktop\test\test.exe
+```
+4. 輸入自然人憑證Pin碼
+5. 出現以下訊息即為新增憑證成功
+```
+Number of files successfully Signed: 1
+Number of warnings: 0
+Number of errors: 0
 ```
 ------
 ## Troubleshoot
