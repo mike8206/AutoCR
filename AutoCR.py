@@ -1,5 +1,6 @@
 from datetime import datetime
 from os.path import exists
+from threading import Thread
 
 import json
 import PySimpleGUI as sg
@@ -8,55 +9,41 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
 
-from threading import Thread
-
-from lib import sys_layout, sys_func, sys_initial, autodigisign, autoopenclinic, autosms, autocredit, autodutymodify, autogetphone
+# customized functions
+from lib import sys_layout, sys_func, sys_initial, autodigisign, autoopenclinic, autosms, autodutymodify
 from lib.sms.google_calendar import googleRefreshToken
 
-# file path
-config_path = 'sys\config.txt'
+# sys file path
+config_path = 'sys\config.json'
 log_path = 'sys\log.txt'
 error_log_path = 'sys\error_log.txt'
 chrome_driver_path = 'sys\chromedriver.exe'
 ie_driver_path = 'sys\IEDriverServer32.exe'
 
-# options
-config_dict={}
-url_dict={}
-values={}
-
+# read settings
 try:
-    with open(config_path, encoding="UTF-8") as file:
-        s = file.read()
-        config_dict = json.loads(s)
+    s = sys_func.readFile(config_path)
+    config_dict = json.loads(s)
 except:
     config_dict = sys_initial.initialConfig(config_path)
 
 try:
-    with open(config_dict['url_path'], encoding="UTF-8") as file:
-        s = file.read()
-        url_dict = json.loads(s)
+    s = sys_func.readFile(config_dict['url_path'])
+    url_dict = json.loads(s)
 except:
     url_dict = sys_initial.initialUrl(config_dict['url_path'])
 
 # functions
 def error_log(error_msg):
-    with open(error_log_path, 'a', encoding="UTF-8") as file:
-        file.write(str(error_msg)+"\n")
+    sys_func.updateFile(error_log_path, error_msg)
 def digisign():
     autodigisign.main(url_dict, config_dict['vs_id_path'], config_dict['list_path'], chrome_driver_path, ie_driver_path)
 def openclnc():
     autoopenclinic.main(url_dict, config_dict['vs_id_path'], chrome_driver_path, ie_driver_path)
-def googletoken():
-    googleRefreshToken(config_dict['google_secret_path'], config_dict['google_token_path'])
 def sms():
     autosms.main(url_dict, config_dict['cr_id_path'], config_dict['phone_path'], config_dict['google_secret_path'], config_dict['google_token_path'], config_dict['google_cal_id'], chrome_driver_path)
-def autocred():
-    autocredit.main(url_dict, config_dict['cr_id_path'], chrome_driver_path)
 def dutymodify(function, data):
     autodutymodify.main(url_dict, function, data, chrome_driver_path)
-def autophone(origin_type):
-    autogetphone.main(url_dict, config_dict['cr_id_path'], origin_type, chrome_driver_path)
 
 # main function
 def main():
@@ -79,11 +66,9 @@ def main():
         update_log(logstring)
 
     def update_log(logstring):
-        with open(log_path, 'a', encoding="UTF-8") as file:
-            file.write(logstring+"\n")
-        with open(log_path, 'r', encoding="UTF-8") as file: 
-            console_log = file.read()
-            window1['-LOG-'].update(console_log)
+        sys_func.updateFile(log_path, logstring)
+        console_log = sys_func.readFile(log_path)
+        window1['-LOG-'].update(console_log)
         
     def schdlr_cron_format(hr, min, hrrepeat):
         hr = hr % 24
@@ -138,7 +123,7 @@ def main():
     window1, window2 = sys_layout.mainSysLayout(config_dict), None
 
     while True:
-        window, event, values = sg.read_all_windows(timeout=100)
+        window, event, values = sg.read_all_windows(timeout=30000)
         if event == '-EXIT-' or event == sg.WIN_CLOSED:
             window.close()
             if window == window2:
@@ -157,11 +142,7 @@ def main():
         if event == '-RUNOPENCLNC-':
             Thread(target=scheduler.add_job, args=[openclnc, None, None, None, '手動執行自動開診'], daemon=True).start()
         if event == '-REFRESHTOKEN-':
-            refreshtoken =  Thread(target=googletoken, daemon=True).start()
-            if refreshtoken:
-                print('finish!')
-            else:
-                print('failed')
+            Thread(target=googleRefreshToken, args=[config_dict['google_secret_path'], config_dict['google_token_path']], daemon=True).start()
         if event == '-RUNSMS-':
             Thread(target=scheduler.add_job, args=[sms, None, None, None, '手動執行自動寄簡訊'], daemon=True).start()
         if event == '-DIGISIGNSWITCH-':
@@ -179,7 +160,7 @@ def main():
         if event == '-AUTOOCR-':
             try:
                 if exists(config_dict['autoocr_path']):
-                    Thread(target=sys_func.autoOCR, args=[config_dict['autoocr_path']], daemon=True).start()
+                    Thread(target=sys_func.callOtherFunction, args=[config_dict['autoocr_path']], daemon=True).start()
             except:
                 sg.Popup('尚未實裝! 請至變更設定開啟額外功能!')
         if event in ('-VSLOGIN-', '-CRLOGIN-'):
@@ -194,19 +175,33 @@ def main():
             except:
                 sg.Popup('尚未實裝! 請至變更設定開啟額外功能!')
         if event == '-AUTOCREDIT-':
-            Thread(target=scheduler.add_job, args=[autocred, None, None, None, '手動執行自動改績效'], daemon=True).start()
+            try:
+                if exists(config_dict['autocredit_path']):
+                    Thread(target=sys_func.callOtherFunction, args=[config_dict['autocredit_path']], daemon=True).start()
+            except:
+                sg.Popup('尚未實裝! 請至變更設定開啟額外功能!')
         if event == '-DUTYMOD-':
             duty_arg = sys_func.dutyModify(config_dict)
             if duty_arg:
                 Thread(target=scheduler.add_job, args=[dutymodify, None, duty_arg, None, '手動執行'+duty_arg[0]], daemon=True).start()
         if event == '-MONTHSCHED-':
-            sg.Popup('尚未實裝! 請至變更設定開啟額外功能!')
-        if event == '-FINDPHONECLINIC-':
-            Thread(target=scheduler.add_job(autophone, args=['clinic'], id='手動執行診間查電話'), daemon=True).start()
-        if event == '-FINDPHONEEXAM-':
-            Thread(target=scheduler.add_job(autophone, args=['exam'], id='手動執行檢查查電話'), daemon=True).start()
+            try:
+                if exists(config_dict['monthschd_path']):
+                    Thread(target=sys_func.callOtherFunction, args=[config_dict['monthschd_path']], daemon=True).start()
+            except:
+                sg.Popup('尚未實裝! 請至變更設定開啟額外功能!')
+        if event == '-FINDPHONE-':
+            try:
+                if exists(config_dict['autophone_path']):
+                    Thread(target=sys_func.callOtherFunction, args=[config_dict['autophone_path']], daemon=True).start()
+            except:
+                sg.Popup('尚未實裝! 請至變更設定開啟額外功能!')
         if event == '-MOVEVIDEO-':
-            sg.Popup('尚未實裝! 請至變更設定開啟額外功能!')
+            try:
+                if exists(config_dict['movevideo_path']):
+                    Thread(target=sys_func.callOtherFunction, args=[config_dict['movevideo_path']], daemon=True).start()
+            except:
+                sg.Popup('尚未實裝! 請至變更設定開啟額外功能!')
         if event == '-SAVECONFIG-':
             sys_func.saveConfig(config_dict, values, config_path)
             sg.Popup("已成功儲存設定!")
