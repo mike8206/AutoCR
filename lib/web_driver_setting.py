@@ -3,7 +3,6 @@ from selenium import webdriver
 def web_driver_setting(browser, driver_path, arg):
     # options
     TIMEOUT = 5
-
     if browser == 'chrome':
         chrome_options = webdriver.ChromeOptions()
         if arg == 'max':
@@ -13,8 +12,7 @@ def web_driver_setting(browser, driver_path, arg):
     elif browser == 'ie':
         ie_options = webdriver.IeOptions()
         ie_options.ignore_zoom_level = True
-        if arg == '':
-            pass
+        ie_options.native_events = False
         # IE driver
         driver = webdriver.Ie(driver_path, options = ie_options)
     elif browser == 'edge':
