@@ -96,10 +96,6 @@ def googleRefreshToken(google_secret_path, google_token_path):
     if creds:
         with open(google_token_path, 'w') as token:
             token.write(creds.to_json())
-        return True
-    else:
-        return False
-    
 
 def google_calendar(google_secret_path, google_token_path, google_cal_id):
     # AMPM
