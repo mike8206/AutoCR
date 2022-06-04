@@ -74,7 +74,7 @@ pyinstaller AutoCR.spec
 2. 在網路上下載signtool.exe
 3. 輸入指令使用signtool新增電子憑證進exe檔
 ```
-C:\signtool.exe sign /a /t http://timestamp.sectigo.com /v C:\Users\Desktop\test\test.exe
+C:\signtool.exe sign /a /t http://timestamp.sectigo.com /fd SHA256 /v C:\Users\Desktop\test\test.exe
 ```
 4. 輸入自然人憑證Pin碼
 5. 出現以下訊息即為新增憑證成功
