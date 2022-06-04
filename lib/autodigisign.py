@@ -1,5 +1,5 @@
 # customized functions
-from lib.sys_func import readIdPwPin
+from lib.sys_func import readIdPwPin, readFile
 from lib.web_driver_setting import web_driver_setting
 from lib.login import login
 from lib.digisign.digisign_transfer import digisign_transfer
@@ -7,18 +7,14 @@ from lib.digisign.digisign_background import digisign_background
 
 def main(url_dict, vs_id_path, list_path, chrome_driver_path, ie_driver_path):
     # read portal credential from txt file
-    vsidpw = {}
-    try:
-        vsidpw = readIdPwPin(vs_id_path)
-    except:
-        raise ValueError('VS帳號密碼檔案錯誤!!')
+    vsidpw = readIdPwPin(vs_id_path)
     # read doctor list from txt file (for digital signature)
     dlist = {}
     try:
-        with open(list_path, encoding="UTF-8") as f:
-            for line in f:
-                (key, val) = line.split(' ',1)
-                dlist[key] = val.removesuffix('\n')
+        f = readFile(list_path).splitlines()
+        for line in f:
+            (key, val) = line.split(' ',1)
+            dlist[key] = val
     except:
         raise ValueError('簽章清單檔案錯誤!!')
     # chrome driver
