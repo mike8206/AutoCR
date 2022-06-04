@@ -2,29 +2,43 @@ import json
 import subprocess
 import PySimpleGUI as sg
 from os.path import relpath, exists
+import chardet
 
 # customized functions
 from lib.sys_initial import initialUrl
 
-def readIdPwPin(file):
+def readIdPwPin(filepath):
     try:
-        with open(file, encoding="UTF-8") as f:
-            idpwlist = f.read().splitlines()
-            idpwpin = {}
-            # id pw (帳號 密碼)
-            idpwpin['id']=idpwlist[0]
-            idpwpin['pw']=idpwlist[1]
-            try:
-                # pin (醫事卡pin碼)
-                idpwpin['pin']=idpwlist[2]
-            except:
-                pass
-            return idpwpin
+        idpwlist = readFile(filepath).splitlines()
+        idpwpin = {}
+        # id pw (帳號 密碼)
+        idpwpin['id']=idpwlist[0]
+        idpwpin['pw']=idpwlist[1]
+        try:
+            # pin (醫事卡pin碼)
+            idpwpin['pin']=idpwlist[2]
+        except:
+            pass
+        return idpwpin
     except:
-        raise ValueError(str(file)+'檔案錯誤!!')
+        raise ValueError(str(filepath)+'檔案錯誤!!')
 
-def saveFile(filename, data):
-    with open(filename, 'w', encoding="UTF-8") as file:
+def readFile(filepath):
+    try:
+        with open(filepath, 'rb') as f:
+            filestatus = chardet.detect(f.read())
+            with open(filepath, encoding=filestatus['encoding']) as f:
+                data = f.read()
+        return data
+    except:
+        raise ValueError(str(filepath)+'檔案錯誤!!')
+
+def updateFile(filepath, string):
+    with open(filepath, 'a', encoding='UTF-8') as f:
+        f.write(string+"\n")
+
+def saveFile(filepath, data):
+    with open(filepath, 'w', encoding="UTF-8") as file:
         file.write(str(data))
 
 def saveConfig(config_dict, values, config_path):
@@ -33,7 +47,7 @@ def saveConfig(config_dict, values, config_path):
     data = json.dumps(config_dict, ensure_ascii=False)
     saveFile(config_path, data)
 
-def saveIdPw(person, filename):
+def saveIdPw(person, filepath):
     while True:
         layout = [[[sg.Text('請輸入'+person+'帳號密碼')],
                     [sg.Text(person+'帳號'), sg.InputText(k='-id-', s=(15,1))],
@@ -44,7 +58,7 @@ def saveIdPw(person, filename):
         if event == 'OK':
             if values['-id-'] !='' and values['-pw-'] !='' and values['-pin-'] !='':
                 data = values['-id-'] + '\n' + values['-pw-'] + '\n' + values['-pin-']
-                saveFile(filename, data)
+                saveFile(filepath, data)
                 sg.Popup(person+'帳號密碼設定完成!')
                 break
             else:
@@ -53,9 +67,9 @@ def saveIdPw(person, filename):
             sg.Popup('設定未完成!')
             break
 
-def saveList(type, filename):
+def saveList(type, filepath):
     try:
-        with open(filename, 'r', encoding='UTF-8') as file:
+        with open(filepath, 'r', encoding='UTF-8') as file:
             defaulttext = file.read()
     except:
         defaulttext = ''
@@ -76,7 +90,7 @@ def saveList(type, filename):
         if event == 'OK':
             if values['-list-'] !='':
                 data = values['-list-']
-                saveFile(filename, data)
+                saveFile(filepath, data)
                 sg.Popup(text+'清單設定完成!')
                 break
         else:
@@ -146,13 +160,12 @@ def changeUrlElement(url_path):
     url_dict = {}
     while True:
         try:
-            with open(url_path, encoding="UTF-8") as file:
-                s = file.read()
-                url_dict = json.loads(s)
-                if url_dict != {}:
-                    break
-                else:
-                    initialUrl(url_path)
+            s = readFile(url_path)
+            url_dict = json.loads(s)
+            if url_dict != {}:
+                break
+            else:
+                initialUrl(url_path)
         except:
             initialUrl(url_path)
     while True:
@@ -165,7 +178,8 @@ def changeUrlElement(url_path):
         event, values = sg.Window('設定網頁元素', layout, size=(900,700)).read(close=True)
         if event == '-OK-':
             url_dict.update(values)
-            saveFile(url_path, url_dict)
+            urldata = json.dumps(url_dict, ensure_ascii=False)
+            saveFile(url_path, urldata)
             sg.Popup('網頁元素設定完成!')
             break
         else:
@@ -179,6 +193,10 @@ def openOtherFunction(config_dict):
                     [sg.Text(), sg.FileBrowse(file_types=(("執行檔", "*.exe"), ), key='-autoocr-')],
                     [sg.Text('IE自動登入: ')],
                     [sg.Text(), sg.FileBrowse(file_types=(("VBS檔", "*.vbs"), ), key='-ielogin-')],
+                    [sg.Text('自動改績效: ')],
+                    [sg.Text(), sg.FileBrowse(file_types=(("執行檔", "*.exe"), ), key='-autocrdt-')],
+                    [sg.Text('自動查電話: ')],
+                    [sg.Text(), sg.FileBrowse(file_types=(("執行檔", "*.exe"), ), key='-autophone-')],
                     [sg.Text('晨科會排班: ')],
                     [sg.Text(), sg.FileBrowse(file_types=(("執行檔", "*.exe"), ), key='-monthsched-')],
                     [sg.Text('一鍵搬影片: ')],
@@ -190,6 +208,10 @@ def openOtherFunction(config_dict):
                 config_dict.update(autoocr_path = relpath(values['-autoocr-']))
             if values['-ielogin-'] !='':
                 config_dict.update(login_path = relpath(values['-ielogin-']))
+            if values['-autocrdt-'] != '':
+                config_dict.update(autocredit_path = relpath(values['-autocrdt-']))
+            if values['-autophone-'] != '':
+                config_dict.update(autophone_path = relpath(values['-autophone-']))
             if values['-monthsched-'] !='':
                 config_dict.update(monthsched_path = relpath(values['-monthsched-']))
             if values['-movevideo-'] !='':
@@ -224,14 +246,11 @@ def checkFileExist(config_dict):
         initialUrl(config_dict['url_path'])
     sg.Popup('檢查檔案已完成!!')
 
-def autoOCR(autoocr_path):
-    subprocess.Popen(autoocr_path)
+def callOtherFunction(file_path):
+    subprocess.Popen(file_path, cwd='func/')
 
 def autoLogin(login_path, portal_url, idpwpin):
-    try:
-        subprocess.Popen(['wscript.exe', login_path, portal_url, idpwpin['id'], idpwpin['pw']])
-    except Exception as error:
-        raise ValueError('自動登入出現錯誤!! %s' % error)
+    subprocess.Popen(['wscript.exe', login_path, portal_url, idpwpin['id'], idpwpin['pw']])
 
 def dutyModify(config_dict):
     idpw = ''
