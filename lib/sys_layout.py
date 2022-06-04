@@ -56,7 +56,7 @@ def mainSysLayout(config_dict):
         ]),
         sg.Frame('執行結果', layout=[
             [sg.Multiline(size=(80, 4), disabled=True, autoscroll=True , auto_refresh=True, key='-LOG-')],
-            [sg.Push(), sg.Text('Version: 1.0.7, Credit by: 吳璨宇, 2022/05/18')]
+            [sg.Push(), sg.Text('Version: 1.1.1, Credit by: 吳璨宇, 2022/06/02')]
         ])]
     ])
 
@@ -70,8 +70,7 @@ def mainSysLayout(config_dict):
         ])],
         [sg.Frame('其他功能', layout=[
             [sg.Button('晨科會排班', key='-MONTHSCHED-', size=(10,1))],
-            [sg.Button('診間查電話', key='-FINDPHONECLINIC-', size=(10,1))],
-            [sg.Button('檢查查電話', key='-FINDPHONEEXAM-', size=(10,1))],
+            [sg.Button('一鍵查電話', key='-FINDPHONE-', size=(10,1))],
             [sg.Button('一鍵搬影片', key='-MOVEVIDEO-', size=(10,1))],
         ])],
     ], vertical_alignment='t')
