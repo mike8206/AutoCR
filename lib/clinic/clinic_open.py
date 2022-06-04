@@ -40,24 +40,26 @@ def clinic_open(driver_ie, url_dict, session_id):
     wait_page_load(driver_ie)
 
     # loop over all clinic
-    number = 2
+    number = 1
     while True:
+        number+=1 #第一個2開始
         strNum = str(number).zfill(2)
         clinicBTN = url_dict['clinic_list_prefix']+strNum+url_dict['clinic_btn_suffix']
+        clinicSTATUS = url_dict['clinic_list_prefix']+strNum+'_ClinicStatusShow'
         try:
             wait_page_load(driver_ie)
-            clinic_tag_ele = driver_ie.find_element(By.ID, clinicBTN)
-            if clinic_tag_ele:
+            clinic_tag_ele = tempWait.until(EC.element_to_be_clickable((By.ID, clinicBTN)))
+            clinic_status_ele = driver_ie.find_element(By.ID, clinicSTATUS)
+            if clinic_tag_ele and clinic_status_ele.text == '未開診':
                 clinic_tag_ele.click()
                 wait_page_load(driver_ie)
-                start_btn = tempWait.until(EC.element_to_be_clickable((By.ID, url_dict['clinic_start_btn'])))
+                start_btn = driver_ie.find_element(By.ID, url_dict['clinic_start_btn'])
                 start_btn.click()
                 wait_page_load(driver_ie)
-                nurse_btn = tempWait.until(EC.element_to_be_clickable((By.ID, url_dict['clinic_nurse_btn'])))
+                nurse_btn = driver_ie.find_element(By.ID, url_dict['clinic_nurse_btn'])
                 nurse_btn.click()
                 wait_page_load(driver_ie)
-                back_btn = tempWait.until(EC.element_to_be_clickable((By.ID, url_dict['clinic_back_btn'])))
+                back_btn = driver_ie.find_element(By.ID, url_dict['clinic_back_btn'])
                 back_btn.click()
-                number+=1
         except:
             break
