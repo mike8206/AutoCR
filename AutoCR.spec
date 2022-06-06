@@ -6,9 +6,9 @@ block_cipher = None
 
 a = Analysis(
     ['AutoCR.py'],
-    pathex=['c:\\users\\user\\appdata\\local\\packages\\pythonsoftwarefoundation.python.3.9_qbz5n2kfra8p0\\localcache\\local-packages'],
+    pathex=['C:\\Python39\\lib'],
     binaries=[],
-    datas=[('./common.onnx','ddddocr')],
+    datas=[('.\\common.onnx', 'ddddocr')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -41,4 +41,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    version='versionfile.txt',
 )
