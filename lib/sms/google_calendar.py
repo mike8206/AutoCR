@@ -123,7 +123,7 @@ def google_calendar(google_secret_path, google_token_path, google_cal_id):
     start_end_time = startEndTime(am, today, timeZone)
 
     try:
-        service = build('calendar', 'v3', credentials=creds)
+        service = build('calendar', 'v3', credentials=creds, static_discovery=False)
         event_list = []
         # Call the Calendar API
         for calendar in google_cal_id:
