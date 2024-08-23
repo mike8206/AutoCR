@@ -1,31 +1,25 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 
-block_cipher = None
-
-
 a = Analysis(
     ['AutoCR.py'],
-    pathex=['C:\\Python39\\lib'],
+    pathex=['C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python39\\lib'],
     binaries=[],
-    datas=[('.\\common.onnx', 'ddddocr')],
+    datas=[('.\\common.onnx', 'ddddocr'), ('.\\common_old.onnx', 'ddddocr')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
     noarchive=False,
+    optimize=0,
 )
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
     a.scripts,
     a.binaries,
-    a.zipfiles,
     a.datas,
     [],
     name='AutoCR',

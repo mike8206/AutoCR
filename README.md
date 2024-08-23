@@ -10,14 +10,19 @@
 1. 自動簽章
 2. 自動開診
 3. 自動寄簡訊
-4. 一鍵請假異動確認
-5. 初次設定檔案檢查
-6. 模組化設定
-7. 可自定義網址元素
-8. 一鍵改績效(已改至其他專案: https://github.com/mike8206/AutoCredit)
-9. 一鍵查電話(已改至其他專案)
+4. 一鍵改績效
+5. 一鍵請假異動確認
+6. 初次設定檔案檢查
+7. 模組化設計
+8. 可自定義網址元素
 ------
 ## 更新部分
+v1.2.0 - 1.5.1
+* 更新檔案目錄
+* 合併改績效功能、客製化簡訊內容
+* 使用webdriver manager簡化更新webdriver問題
+* 使用FreeSimpleGUI替代PySimpleGUI
+
 v1.1.1
 * 更新檔案目錄
 * 修正IE native event造成開診中斷
@@ -43,25 +48,31 @@ v1.0.6
 * 新增一鍵請假異動確認
 * 更新網址參數
 ------
+## Troubleshoot
+1. 目前開診仍未能讀取讀卡機，推測可能為網頁載入完成時ajax未完全讀取，問題解決方式可能為延長秒數、更新判斷網頁載入完成機制等。
+2. 目前 ddddocr 受限於 onnxruntime ，僅支援 Python version <=3.10
+3. pyinstaller無法執行，可使用以下指令檢查安裝位置
+```
+pip uninstall pyinstaller
+```
+4. 其他錯誤可在sys\\error_log.txt查詢
+------
 ## 預計更新
-* 晨科會排班 (以另一專案寫code中)
-* 一鍵查電話 (以另一專案寫code中)
-* 一鍵搬影片 (尚未開始)
+* 修正開診部分
 ------
 ## 使用前注意事項
-1. 將符合電腦版本的chromedriver, IEDriverServer32放在sys目錄下
+1. CR或VS登入文字檔架構為三行
 2. 若不想加入Google行事曆預設primary，可至sys\\sys_config.json設定
-3. CR或VS登入文字檔架構為三行
 ------
 ## 打包方式
 1. 安裝以下程式
 ```
-pip install --upgrade pyinstaller selenium pySimpleGUI apscheduler pytz requests ddddocr chardet google-api-python-client google-auth-httplib2 google-auth-oauthlib
+pip install -r requirements.txt
 ```
 2. 依照自己電腦安裝package的位置，更新spec檔案內pathx變數：
 > pathex=['C:\\python.3.9\\localcache\\local-packages'],
 3. 將ddddocr在python package內的common.onnx檔案複製到與spec相同目錄下，並更新spec檔案：
-> datas=[('./common.onnx','ddddocr')],
+> datas=[('.\\common.onnx', 'ddddocr'), ('.\\common_old.onnx', 'ddddocr')],
 4. 在AutoCR.py及AutoCR.spec資料夾內打開終端，使用指令pyinstaller打包成exe檔
 ```
 pyinstaller AutoCR.spec
@@ -76,18 +87,10 @@ pyinstaller AutoCR.spec
 ```
 C:\signtool.exe sign /a /t http://timestamp.sectigo.com /fd SHA256 /v C:\Users\Desktop\test\test.exe
 ```
-4. 輸入自然人憑證Pin碼
-5. 出現以下訊息即為新增憑證成功
+1. 輸入自然人憑證Pin碼
+2. 出現以下訊息即為新增憑證成功
 ```
 Number of files successfully Signed: 1
 Number of warnings: 0
 Number of errors: 0
 ```
-------
-## Troubleshoot
-1. 目前 ddddocr 僅支援 Python version <=3.9
-2. pyinstaller無法執行，可使用以下指令檢查安裝位置
-```
-pip uninstall pyinstaller
-```
-3. 其他錯誤可在sys\\error_log.txt查詢
