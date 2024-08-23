@@ -1,41 +1,50 @@
-import json
-
-# customized functions
-from lib import sys_func
-
-def initialConfig(config_path):
+def initialConfig():
     config_dict = {
         "setup": False,
-        "vs_id_path": "loginID.txt",
+        "log_path": "sys\log.txt",
+        "error_log_path": "sys\error_log.txt",
+        "url_path": "sys\web_config.json",
+        "chrome_driver_path": "sys\chromedriver.exe",
+        "ie_driver_path": "sys\IEDriverServer32.exe",
+        "edge_driver_path": "sys\msedgedriver.exe",
+        "vs_id_path": "VSID.txt",
         "cr_id_path": "CRID.txt",
         "list_path": "List.txt",
         "phone_path": "Phonelist.txt",
+        "sms_path": "SMStext.txt",
+        "vslist_path": "VSList.txt",
         "google_secret_path": "secret.json",
         "google_token_path": "token.json",
         "google_cal_id": ['primary'],
-        "url_path": "sys\web_config.json",
-        "theme": "DefaultNoMoreNagging", 
+        "HCA_service_name": "HCAServiSign.exe",
+        "pin_window_title": "CS 5.0",
+        "theme": "DefaultNoMoreNagging",
+        "digi_switch": False,
         "digi_hr": 6,
         "digi_min": 0,
         "digi_repeat": 8,
+        "clinic_switch": False,
         "am_clinic_hr": 8,
         "am_clinic_min": 0,
         "pm_clinic_hr": 12,
         "pm_clinic_min": 30,
+        "sms_switch": False,
         "am_sms_hr": 9,
         "am_sms_min": 0,
         "pm_sms_hr": 16,
-        "pm_sms_min": 0
+        "pm_sms_min": 0,
+        "resume_switch": True,
+        "hide_web": False,
+        "testenv": False,
     }
-    data = json.dumps(config_dict, ensure_ascii=False)
-    sys_func.saveFile(config_path, data)
     return config_dict
 
-def initialUrl(url_path):
+def initialUrl():
     url_dict = {
         "portal_url": "http://portal.ntuh.gov.tw/General/Login.aspx",
         "digisign_replace_url": "http://ihisaw.ntuh.gov.tw/WebApplication/DigitalSignature/DSExecuteEmpReplace.aspx?SESSION=",
         "digisign_background_url": "http://ihisaw.ntuh.gov.tw/WebApplication/DigitalSignature/BackGroundDS.aspx?SESSION=",
+        "digisign_query_url": "http://ihisaw.ntuh.gov.tw/WebApplication/DigitalSignature/DsQuery.aspx?SESSION=",
         "open_clinic_url": "http://hisaw.ntuh.gov.tw/WebApplication/Clinics/OpenClinicsByClinicNo.aspx?SESSION=",
         "send_sms_url": "http://ihisaw.ntuh.gov.tw/WebApplication/OtherIndependentProj/CriticalVentilator/MessageSend.aspx?SESSION=",
         "exam_query_url": "http://hisaw.ntuh.gov.tw/WebApplication/Radiology/ReadOnlyExaPatientListQuery.aspx?SESSION=",
@@ -53,10 +62,10 @@ def initialUrl(url_path):
         "captcha_input_ele": "txtVerifyCode",
         "submit_ele": "imgBtnSubmitNew",
         "digi_doc_id": "NTUHWeb1_txbEmpNO",
-        "digi_update_panel": "NTUHWeb1_UpdatePanel1",
         "digi_refresh_btn": "NTUHWeb1_btnRefresh",
         "digi_count_text": "NTUHWeb1_lblUnDsCnts",
         "digi_new_id": "NTUHWeb1_txbEmpNoNew",
+        "digi_new_name": "NTUHWeb1_lblEmpNameNew",
         "digi_tran_btn": "NTUHWeb1_btnUpdate",
         "digi_EMR_cbx": "NTUHWeb1_dgrEmrRecord_ctl01_cbxSelectAll",
         "digi_DRUG_cbx": "NTUHWeb1_dgrDrugGivenRecord_ctl01_cbxSelectAll",
@@ -64,6 +73,11 @@ def initialUrl(url_path):
         "digiback_btn": "NTUHWeb1_btnBackGroundDSByPCSC",
         "digiback_ddl_reason": "reasonDDL-id > option:nth-child(1)",
         "digiback_ddl_confirm": "body > div > div.ui-dialog-buttonpane.ui-widget-content.ui-helper-clearfix > div > button:nth-child(1)",
+        "digiquery_pin": "NTUHWeb1_txbPinCode",
+        "digiquery_ie_btn": "NTUHWeb1_btnDoSignatureByPCSC",
+        "digiquery_chrome_btn": "NTUHWeb1_btnDoSignatureByCrossBroswer",
+        "digiquery_refresh_btn": "NTUHWeb1_btnRefresh",
+        "digiquery_count_text": "NTUHWeb1_lblUnDsCnts",
         "clinic_hosp_list": "NTUHWeb1_HospDropList",
         "clinic_dept_list": "NTUHWeb1_DeptDropList",
         "clinic_year": "NTUHWeb1_DateTextBoxYearMonthDayInputUI1_YearInput",
@@ -90,7 +104,11 @@ def initialUrl(url_path):
         "clinic_cred_change_btn":"NTUHWeb1_ModifyRewardEmpNoButton",
         "clinic_cred_return_pt":"NTUHWeb1_ButtonReturnConfirmDiagnosisOrder",
         "clinic_ptpage_return":"NTUHWeb1_Return",
+        "clinic_med_author": "MedicalManagementAuthor.aspx",
+        "clinic_med_author_reason": "RBList",
+        "clinic_med_author_btn": "ConfirmButton",
         "sms_phone_ele": "NTUHWeb1_PHSTelNo",
+        "sms_id_ele": "NTUHWeb1_tbxEMPNo",
         "sms_type_btn": "NTUHWeb1_rdbNormal",
         "sms_msg_input": "NTUHWeb1_MessageContent",
         "sms_send_btn": "NTUHWeb1_btnSendSMSAndEmail",
@@ -117,8 +135,31 @@ def initialUrl(url_path):
         "verify_modify_back": "NTUHWebVerifyModificationAdm_btnBack",
         "verify_staff_list": "NTUHWebVerifyModificationStaff_dtgQueryList",
         "verify_staff_btn": "NTUHWebVerifyModificationStaff_btnApply",
-        "verify_staff_back": "NTUHWebVerifyModificationStaff_btnBack",    
+        "verify_staff_back": "NTUHWebVerifyModificationStaff_btnBack",
+        "hca_card_obj": "HCACard",
+        "hca_card_api_obj": "HCACardAPI",
     }
-    data = json.dumps(url_dict, ensure_ascii=False)
-    sys_func.saveFile(url_path, data)
     return url_dict
+
+def initialSMS():
+    sms_dict = {
+        "amtext_prefix": "各位同仁早！今日",
+        "pmtext_prefix": "各位同仁辛苦了，請記得電子簽章",
+        "fripmtext_prefix": "各位同仁辛苦了，周末值班同仁請記得電子簽章",
+        "noevent": "無其他行程",
+        "allday": "全天",
+        "Mon": "（一）",
+        "Tue": "（二）",
+        "Wed": "（三）",
+        "Thu": "（四）",
+        "Fri": "（五）",
+        "Sat": "（六）",
+        "Sun": "（日）",
+        "digi_reminder": "各位同仁辛苦了，請記得電子簽章",
+        "left_digi_prefix": "辛苦了，VS還有",
+        "left_digi_suffix": "筆未簽章，請注意！",
+        "left_digi_warning": "(此為提醒portal尚有未簽章)",
+        "comma": "，",
+        "end": "。",
+    }
+    return sms_dict

@@ -1,27 +1,36 @@
 # customized functions
-from lib.sys_func import readIdPwPin, readFile
-from lib.web_driver_setting import web_driver_setting
+from lib.sys_func import readIdPwPin, readGSM, readSMStext
+from lib.sys_web import callWebDriver
 from lib.login import login
-from lib.sms.google_calendar import google_calendar
-from lib.sms.sms_send import sms_send
+from lib.sms.google_calendar import googleCalendar
+from lib.sms.sms_func import startEndTime, eventListToString, eventToSmsString, splitSmsString
+from lib.sms.sms_web import smsSend
 
-def main(url_dict, cr_id_path, phone_path, google_secret_path, google_token_path, google_cal_id, chrome_driver_path):
+def main(config_dict, url_dict):
     # read portal credential from txt file
-    cridpw = readIdPwPin(cr_id_path)
-    phone_list = readFile(phone_path).strip().removesuffix(',')
-    if len(google_cal_id) != 0:
+    cr_id_pw = readIdPwPin(config_dict['cr_id_path'])
+
+    # read GSM list
+    gsm_list = readGSM(config_dict['phone_path'])
+
+    # read SMS sentences
+    sms_text_dict = readSMStext(config_dict['sms_path'])
+    
+    if len(config_dict['google_cal_id']) != 0:
         # get event from google calendar
-        SMSstring = google_calendar(google_secret_path, google_token_path, google_cal_id)
-        # chrome driver
-        driver = web_driver_setting('chrome', chrome_driver_path, 'max')
+        start_end_time = startEndTime()
+        event_list = googleCalendar(config_dict, start_end_time)
+        event_string = eventListToString(event_list, sms_text_dict)
+        SMS_string = eventToSmsString(start_end_time, sms_text_dict, event_string)
+
+        # call split SMS function
+        SMS_list = splitSmsString(SMS_string)
     else:
         raise ValueError('未設定Google日曆ID!!')
-    # login using chrome and get the session id
-    session_id = login(driver, url_dict, cridpw)
-    try:
-        # send sms
-        sms_send(driver, url_dict, session_id, phone_list, SMSstring)
-        driver.close()
-    except Exception as error:
-        driver.close()
-        raise ValueError('寄送簡訊失敗!! %s' % error)
+
+    # use webdriver for login
+    driver = callWebDriver(config_dict, 'max')
+    session_id = login(driver, url_dict, cr_id_pw)
+    
+    # send sms
+    smsSend(driver, url_dict, session_id, "phone", gsm_list, SMS_list)

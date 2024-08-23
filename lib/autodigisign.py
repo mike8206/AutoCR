@@ -1,40 +1,62 @@
-# customized functions
-from lib.sys_func import readIdPwPin, readFile
-from lib.web_driver_setting import web_driver_setting
-from lib.login import login
-from lib.digisign.digisign_transfer import digisign_transfer
-from lib.digisign.digisign_background import digisign_background
+from threading import Thread
 
-def main(url_dict, vs_id_path, list_path, chrome_driver_path, ie_driver_path):
+# customized functions
+from lib.sys_func import readIdPwPin, readDigiList, readSMStext
+from lib.sys_web import callWebDriver
+from lib.login import login
+from lib.digisign.digisign_count import countDigisignNum
+from lib.digisign.digisign_transfer import transferDigisign
+from lib.digisign.digisign_background import digisignBGSign
+from lib.digisign.digisign_query import digisignQuerySign
+from lib.sms.sms_func import splitSmsString
+from lib.sms.sms_web import smsSend
+
+def main(config_dict, url_dict):
     # read portal credential from txt file
-    vsidpw = readIdPwPin(vs_id_path)
+    vs_id_pw = readIdPwPin(config_dict['vs_id_path'])
+    cr_id_pw = readIdPwPin(config_dict['cr_id_path'])
+
     # read doctor list from txt file (for digital signature)
-    dlist = {}
-    try:
-        f = readFile(list_path).splitlines()
-        for line in f:
-            (key, val) = line.split(' ',1)
-            dlist[key] = val
-    except:
-        raise ValueError('簽章清單檔案錯誤!!')
-    # chrome driver
-    driver = web_driver_setting('chrome', chrome_driver_path, 'max')
-    # login using chrome and get the session id
-    session_id = login(driver, url_dict, vsidpw)
-    try:
-        # use chrome for digisign replacing all IDs
-        digisign_transfer(driver, url_dict, session_id, vsidpw, dlist)
-        driver.close()
-    except Exception as error:
-        driver.close()
-        raise ValueError('轉簽章設定錯誤!! %s' % error)
-    try:
-        # IE driver
-        driver_ie = web_driver_setting('ie', ie_driver_path, '')
-        # open IE for background signing
-        digisign_background(driver_ie, url_dict, session_id, vsidpw)
-        driver_ie.close()
-    except Exception as error:
-        driver_ie.close()
-        raise ValueError('背景簽章設定錯誤!! %s' % error)
+    doctor_list = readDigiList(config_dict['list_path'])
     
+    # read SMS sentences
+    sms_text_dict = readSMStext(config_dict['sms_path'])
+
+    # use webdriver for login
+    driver = callWebDriver(config_dict, 'max')
+    session_id = login(driver, url_dict, vs_id_pw)
+
+    # use webdriver for check left amount
+    left_digi = countDigisignNum(driver, url_dict, session_id)
+    backgroundsign = False
+
+    if left_digi > 100:
+        # send alert message to CR
+        SMS_string = sms_text_dict['left_digi_prefix']+str(left_digi)+sms_text_dict['left_digi_suffix']+sms_text_dict['left_digi_warning']
+        SMS_list = splitSmsString(SMS_string)
+        driver2 = callWebDriver(config_dict, 'headless')
+        smsSend(driver2, url_dict, session_id, "id", cr_id_pw['id'], SMS_list)
+
+        # open webdriver for background signing
+        driver3 = callWebDriver(config_dict, 'max')
+        backgroundsign = True
+        Thread(target=digisignBGSign, args=[driver3, url_dict, session_id, vs_id_pw], daemon=True).start()
+
+    # use webdriver for digisign replacing all IDs
+    unsignlist = transferDigisign(driver, url_dict, session_id, vs_id_pw, doctor_list)
+    
+    if not backgroundsign:
+        # DSquery signing
+        driver3 = callWebDriver(config_dict, 'max')
+        digisignQuerySign(config_dict, driver3, url_dict, session_id, vs_id_pw)
+    
+    # send SMS to notice unsign ppl
+    if unsignlist:
+        id_list = ",".join(unsignlist)
+        
+        SMS_string = sms_text_dict['digi_reminder']+sms_text_dict['left_digi_warning']
+        SMS_list = splitSmsString(SMS_string)
+        
+        driver2 = callWebDriver(config_dict, 'headless')
+        session_id = login(driver2, url_dict, cr_id_pw)
+        smsSend(driver2, url_dict, session_id, "id", id_list, SMS_list)
