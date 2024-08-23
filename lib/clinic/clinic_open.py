@@ -1,65 +1,92 @@
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, ElementNotInteractableException
 from selenium.webdriver.common.by import By
-from datetime import datetime
-from pytz import timezone
+from time import sleep
 
 # customized functions
-from lib.wait_page_load import wait_page_load
+from lib.sys_web import waitPageLoad
+from lib.clinic.clinic_func import clinicPageNavi
+from lib.sys_func import enterCardPw, currentDateTime
 
-def clinic_open(driver_ie, url_dict, session_id):
-    tempWait = WebDriverWait(driver_ie, 60)
-    # IE goto open clinic page
-    driver_ie.get(url_dict['open_clinic_url'] + session_id)
-    driver_ie.minimize_window()
-    wait_page_load(driver_ie)
-
-    hosp_list_ele = Select(driver_ie.find_element(By.ID, url_dict['clinic_hosp_list']))
-    hosp_list_ele.select_by_visible_text(url_dict['hosp_name'])
-    dept_list_ele = Select(driver_ie.find_element(By.ID, url_dict['clinic_dept_list']))
-    dept_list_ele.select_by_visible_text(url_dict['dept_name'])
-    wait_page_load(driver_ie)
-
-    # AMPM
-    ampm_list_ele = Select(driver_ie.find_element(By.ID, url_dict['clinic_ampm_list']))
-    timeZone = timezone('Asia/Taipei')
-    nowhour = datetime.now(timeZone).strftime('%H')
-    if 7 <= int(nowhour) <= 10:
-        ampm_text = '上午'
-    elif 11 <= int(nowhour) <= 14 :
-        ampm_text = '下午'
-    else:
-        raise ValueError('不是開診時間!')
+def clinicOpen(driver, url_dict, session_id, config_dict, vs_id_pw):
+    ampm_text = ''
+    open_count = 0
     
-    while ampm_list_ele.first_selected_option.text != ampm_text:
-        ampm_list_ele.select_by_visible_text(ampm_text)
+    try:
+        date_arg = currentDateTime()
+        if 7 <= int(date_arg['hour']) <= 10:
+            ampm_text = '上午'
+        elif 11 <= int(date_arg['hour']) <= 14:
+            ampm_text = '下午'
+        if not ampm_text:
+            raise ValueError('非開診時間!')
+        
+        # Prepare clinic page navigation arguments
+        clinic_arg = {
+            "HOSP": url_dict['hosp_name'],
+            "DEPT": url_dict['dept_name'],
+            "AMPM": ampm_text,
+            "YEAR": date_arg['year'],
+            "MONTH": date_arg['month'],
+            "DAY": date_arg['day'],
+        }
+        
+        temp_wait = WebDriverWait(driver, 30)
+        clinicPageNavi(driver, url_dict, session_id, clinic_arg)
+        
+        # Recheck clinic open: twice
+        while open_count < 2:
+            # loop over all clinic
+            number = 1
+            while True:
+                number += 1 #第一個2開始，每次增加1
+                strNum = str(number).zfill(2)
+                clinicBTN = url_dict['clinic_list_prefix']+strNum+url_dict['clinic_btn_suffix']
+                clinicSTATUS = url_dict['clinic_list_prefix']+strNum+'_ClinicStatusShow'
+                waitPageLoad(driver)
+                try:
+                    clinic_tag_ele = temp_wait.until(EC.element_to_be_clickable((By.ID, clinicBTN)))
+                    clinic_status_ele = driver.find_element(By.ID, clinicSTATUS)
+                    if clinic_tag_ele and clinic_status_ele.text == '未開診':
+                        try:
+                            clinic_tag_ele.click()
+                            waitPageLoad(driver)
+                            
+                            temp_wait.until(EC.presence_of_element_located((By.ID, url_dict['hca_card_obj'])))
 
-    query_input_ele = driver_ie.find_element(By.ID, url_dict['clinic_query_btn'])
-    query_input_ele.click()
-    wait_page_load(driver_ie)
-
-    # loop over all clinic
-    number = 1
-    while True:
-        number+=1 #第一個2開始
-        strNum = str(number).zfill(2)
-        clinicBTN = url_dict['clinic_list_prefix']+strNum+url_dict['clinic_btn_suffix']
-        clinicSTATUS = url_dict['clinic_list_prefix']+strNum+'_ClinicStatusShow'
+                            start_btn = temp_wait.until(EC.element_to_be_clickable((By.ID, url_dict['clinic_start_btn'])))
+                            sleep(10)
+                            driver.execute_script('arguments[0].click()', start_btn)
+                            sleep(0.5)
+                            waitPageLoad(driver)
+                            
+                            if number == 2:
+                                sleep(5)
+                                enterCardPw(config_dict['pin_window_title'], vs_id_pw['pw'])
+                                sleep(0.5)
+                            
+                            temp_wait.until(EC.presence_of_element_located((By.ID, url_dict['hca_card_obj'])))
+                            nurse_btn = temp_wait.until(EC.element_to_be_clickable((By.ID, url_dict['clinic_nurse_btn'])))
+                            driver.execute_script('arguments[0].click()', nurse_btn)
+                            sleep(0.5)
+                            waitPageLoad(driver)
+                            
+                            back_btn = temp_wait.until(EC.element_to_be_clickable((By.ID, url_dict['clinic_back_btn'])))
+                            back_btn.click()
+                        except (TimeoutException, NoSuchElementException, ElementNotInteractableException):
+                            clinicPageNavi(driver, url_dict, session_id, clinic_arg)
+                            continue
+                except TimeoutException:
+                    break
+            open_count += 1
+    
+    except Exception as error:
+        raise ValueError(f'clinicOpen: 自動開診設定錯誤!! {error}')
+    
+    finally:
         try:
-            wait_page_load(driver_ie)
-            clinic_tag_ele = tempWait.until(EC.element_to_be_clickable((By.ID, clinicBTN)))
-            clinic_status_ele = driver_ie.find_element(By.ID, clinicSTATUS)
-            if clinic_tag_ele and clinic_status_ele.text == '未開診':
-                clinic_tag_ele.click()
-                wait_page_load(driver_ie)
-                start_btn = driver_ie.find_element(By.ID, url_dict['clinic_start_btn'])
-                start_btn.click()
-                wait_page_load(driver_ie)
-                nurse_btn = driver_ie.find_element(By.ID, url_dict['clinic_nurse_btn'])
-                nurse_btn.click()
-                wait_page_load(driver_ie)
-                back_btn = driver_ie.find_element(By.ID, url_dict['clinic_back_btn'])
-                back_btn.click()
+            driver.quit()
         except:
-            break
+            pass
+    
